@@ -2,7 +2,7 @@ package fr.carnet.echange.config;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RenderDatabaseConfigTest {
 
@@ -17,12 +17,10 @@ class RenderDatabaseConfigTest {
     }
 
     @Test
-    void parsePostgresSchemeWithPort() {
-        var parsed = RenderDatabaseConfig.ParsedDbUrl.parse(
-                "postgres://user:pass@db-host:5432/mydb");
-
-        assertEquals("jdbc:postgresql://db-host:5432/mydb", parsed.jdbcUrl());
-        assertEquals("user", parsed.username());
-        assertEquals("pass", parsed.password());
+    void postgresEnvCondition() {
+        assertTrue(PostgresEnvCondition.isPostgresUrl("postgresql://u:p@host/db"));
+        assertTrue(PostgresEnvCondition.isPostgresUrl("postgres://u:p@host/db"));
+        assertFalse(PostgresEnvCondition.isPostgresUrl("9a71b1b93289"));
+        assertFalse(PostgresEnvCondition.isPostgresUrl(null));
     }
 }

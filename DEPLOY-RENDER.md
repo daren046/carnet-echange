@@ -3,11 +3,9 @@
 ## Si l'API est en "Failed deploy"
 
 1. Render → **carnet-echange-api** → **Environment**
-2. **Supprime** ces variables si présentes (elles bloquent le bon fonctionnement) :
-   - `DATABASE_URL` (surtout si ce n'est pas une URL `postgresql://...`)
-   - `VITE_API_URL` (ne va que sur le frontend)
-3. Render → ton **Blueprint** → **Sync** (réapplique `render.yaml`)
-4. Attends 5–10 min le redéploiement
+2. **Supprime** `DATABASE_URL` si elle ne commence **pas** par `postgresql://`
+3. Si `DATABASE_URL` manque : **Add from Database** → `carnet-db` → **Connection String**
+4. Render → **Blueprint** → **Sync**
 
 ---
 
@@ -31,7 +29,7 @@
 
 ## Variables (automatiques via render.yaml)
 
-**API** : `RENDER_DATABASE_URL`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`
+**API** : `DATABASE_URL` (liée à carnet-db), `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`
 
 **Frontend** : `VITE_API_URL`
 

@@ -17,7 +17,7 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/v1/health
     envVars:
-      - key: RENDER_DATABASE_URL
+      - key: DATABASE_URL
         fromDatabase:
           name: carnet-db
           property: connectionString

@@ -1,9 +1,13 @@
 package fr.carnet.echange.config;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
@@ -13,17 +17,24 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Render injecte RENDER_DATABASE_URL (via render.yaml + fromDatabase).
- * Ne pas utiliser DATABASE_URL manuellement — format postgres://user:pass@host/db
+ * Connexion PostgreSQL Render — lit DATABASE_URL (standard Render) ou RENDER_DATABASE_URL.
  */
 @Configuration
-@ConditionalOnProperty(name = "RENDER_DATABASE_URL")
+@Conditional(PostgresEnvCondition.class)
+@AutoConfigureBefore(DataSourceAutoConfiguration.class)
 public class RenderDatabaseConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(RenderDatabaseConfig.class);
 
     @Bean
     @Primary
-    public DataSource renderDataSource(@Value("${RENDER_DATABASE_URL}") String databaseUrl) {
-        ParsedDbUrl parsed = ParsedDbUrl.parse(databaseUrl);
+    public DataSource renderDataSource(
+            @Value("${RENDER_DATABASE_URL:}") String renderDatabaseUrl,
+            @Value("${DATABASE_URL:}") String databaseUrl) {
+        String source = !renderDatabaseUrl.isBlank() ? renderDatabaseUrl : databaseUrl;
+        ParsedDbUrl parsed = ParsedDbUrl.parse(source);
+
+        log.info("PostgreSQL Render : {}:{}/{}", parsed.host(), parsed.port(), parsed.database());
 
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
@@ -34,17 +45,18 @@ public class RenderDatabaseConfig {
         return dataSource;
     }
 
-    record ParsedDbUrl(String jdbcUrl, String username, String password) {
+    record ParsedDbUrl(String jdbcUrl, String username, String password, String host, int port, String database) {
 
         static ParsedDbUrl parse(String url) {
             if (url == null || url.isBlank()) {
-                throw new IllegalArgumentException("RENDER_DATABASE_URL est vide");
+                throw new IllegalStateException(
+                        "DATABASE_URL manquante. Sur Render : lie carnet-db au service API ou Sync le Blueprint.");
             }
 
             String normalized = url.trim().replaceFirst("^postgres://", "postgresql://");
             if (!normalized.startsWith("postgresql://")) {
-                throw new IllegalArgumentException(
-                        "RENDER_DATABASE_URL invalide (attendu postgresql://...). Valeur reçue : " + url);
+                throw new IllegalStateException(
+                        "DATABASE_URL invalide (attendu postgresql://...). Reçu : " + url);
             }
 
             URI uri = URI.create(normalized);
@@ -63,9 +75,10 @@ public class RenderDatabaseConfig {
 
             int port = uri.getPort() == -1 ? 5432 : uri.getPort();
             String database = uri.getPath().startsWith("/") ? uri.getPath().substring(1) : uri.getPath();
-            String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + port + "/" + database;
+            String host = uri.getHost();
+            String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + database;
 
-            return new ParsedDbUrl(jdbcUrl, username, password);
+            return new ParsedDbUrl(jdbcUrl, username, password, host, port, database);
         }
 
         private static String decode(String value) {
