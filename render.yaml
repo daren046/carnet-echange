@@ -8,7 +8,7 @@ databases:
     user: carnet
 
 services:
-  # ─── API Spring Boot (Docker — Render ne supporte pas runtime: java) ───
+  # ─── API Spring Boot (Docker) ───
   - type: web
     name: carnet-echange-api
     runtime: docker
@@ -22,9 +22,9 @@ services:
           name: carnet-db
           property: connectionString
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        sync: false
+        value: https://carnet-echange-web.onrender.com
       - key: UPLOAD_DIR
         value: /tmp/carnet-uploads
 
@@ -41,4 +41,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://carnet-echange-api.onrender.com/api/v1

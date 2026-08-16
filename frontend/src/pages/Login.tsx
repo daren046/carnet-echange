@@ -68,12 +68,6 @@ export function Login() {
             S&apos;inscrire
           </Link>
         </p>
-
-        <div className="mt-6 rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
-          <p className="font-medium">Comptes de démo :</p>
-          <p className="mt-1">Élève : demo@carnet.fr / demo1234</p>
-          <p>Livreur : livreur@carnet.fr / livreur123</p>
-        </div>
       </div>
     </Layout>
   );
