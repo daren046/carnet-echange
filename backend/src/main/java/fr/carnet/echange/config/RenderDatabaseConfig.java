@@ -8,10 +8,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 /**
- * Render fournit DATABASE_URL au format postgres://user:pass@host/db
- * Cette config prend le relais uniquement quand cette variable est définie.
+ * Render fournit DATABASE_URL au format postgres://user:pass@host[:port]/db
+ * Spring Boot attend jdbc:postgresql://host:port/db + identifiants séparés.
  */
 @Configuration
 @ConditionalOnProperty(name = "DATABASE_URL")
@@ -20,34 +23,52 @@ public class RenderDatabaseConfig {
     @Bean
     @Primary
     public DataSource renderDataSource(@Value("${DATABASE_URL}") String databaseUrl) {
+        ParsedDbUrl parsed = ParsedDbUrl.parse(databaseUrl);
+
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(toJdbcUrl(databaseUrl));
-        parseCredentials(databaseUrl, dataSource);
+        dataSource.setDriverClassName("org.postgresql.Driver");
+        dataSource.setJdbcUrl(parsed.jdbcUrl());
+        dataSource.setUsername(parsed.username());
+        dataSource.setPassword(parsed.password());
         return dataSource;
     }
 
-    static String toJdbcUrl(String url) {
-        if (url.startsWith("postgres://")) {
-            return "jdbc:postgresql://" + url.substring("postgres://".length());
+    record ParsedDbUrl(String jdbcUrl, String username, String password) {
+
+        static ParsedDbUrl parse(String url) {
+            String normalized = url.replaceFirst("^postgres://", "postgresql://");
+            if (!normalized.startsWith("postgresql://")) {
+                throw new IllegalArgumentException("Unsupported DATABASE_URL format");
+            }
+
+            URI uri = URI.create(normalized);
+            String userInfo = uri.getUserInfo();
+            String username = "";
+            String password = "";
+            if (userInfo != null) {
+                int colon = userInfo.indexOf(':');
+                if (colon >= 0) {
+                    username = decode(userInfo.substring(0, colon));
+                    password = decode(userInfo.substring(colon + 1));
+                } else {
+                    username = decode(userInfo);
+                }
+            }
+
+            int port = uri.getPort() == -1 ? 5432 : uri.getPort();
+            String database = uri.getPath().startsWith("/") ? uri.getPath().substring(1) : uri.getPath();
+            String jdbcUrl = "jdbc:postgresql://" + uri.getHost() + ":" + port + "/" + database;
+
+            return new ParsedDbUrl(jdbcUrl, username, password);
         }
-        if (url.startsWith("postgresql://")) {
-            return "jdbc:" + url;
+
+        private static String decode(String value) {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8);
         }
-        return url;
     }
 
-    private static void parseCredentials(String url, HikariDataSource dataSource) {
-        try {
-            String withoutScheme = url.replaceFirst("^postgres(ql)?://", "");
-            int at = withoutScheme.lastIndexOf('@');
-            if (at <= 0) return;
-            String userInfo = withoutScheme.substring(0, at);
-            int colon = userInfo.indexOf(':');
-            if (colon > 0) {
-                dataSource.setUsername(userInfo.substring(0, colon));
-                dataSource.setPassword(userInfo.substring(colon + 1));
-            }
-        } catch (Exception ignored) {
-        }
+    /** Conservé pour compatibilité / tests — préférer {@link ParsedDbUrl#parse(String)}. */
+    static String toJdbcUrl(String url) {
+        return ParsedDbUrl.parse(url).jdbcUrl();
     }
 }
