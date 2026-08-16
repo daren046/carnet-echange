@@ -4,8 +4,7 @@
 
 1. Render → **carnet-echange-api** → **Environment**
 2. **Supprime** `DATABASE_URL` si elle ne commence **pas** par `postgresql://`
-3. Si `DATABASE_URL` manque : **Add from Database** → `carnet-db` → **Connection String**
-4. Render → **Blueprint** → **Sync**
+3. Render → **Blueprint** → **Sync** (réinjecte `DATABASE_URL` + `PGHOST` depuis `carnet-db`)
 
 ---
 
@@ -29,7 +28,7 @@
 
 ## Variables (automatiques via render.yaml)
 
-**API** : `DATABASE_URL` (liée à carnet-db), `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`
+**API** : `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`
 
 **Frontend** : `VITE_API_URL`
 
