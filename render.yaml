@@ -8,18 +8,15 @@ databases:
     user: carnet
 
 services:
-  # ─── API Spring Boot ───
+  # ─── API Spring Boot (Docker — Render ne supporte pas runtime: java) ───
   - type: web
     name: carnet-echange-api
-    runtime: java
+    runtime: docker
     plan: free
     rootDir: backend
-    buildCommand: mvn clean package -DskipTests
-    startCommand: java -jar target/carnet-echange-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/v1/health
     envVars:
-      - key: JAVA_VERSION
-        value: "21"
       - key: DATABASE_URL
         fromDatabase:
           name: carnet-db

@@ -49,10 +49,9 @@ Le fichier `render.yaml` à la racine crée automatiquement :
 
 | Champ | Valeur |
 |-------|--------|
-| Runtime | **Java** |
+| Runtime | **Docker** |
 | Root Directory | `backend` |
-| Build Command | `mvn clean package -DskipTests` |
-| Start Command | `java -jar target/carnet-echange-0.0.1-SNAPSHOT.jar` |
+| Dockerfile | `backend/Dockerfile` |
 | Health Check | `/api/v1/health` |
 
 **Variables d'environnement :**
@@ -62,7 +61,6 @@ DATABASE_URL=<Internal Database URL from PostgreSQL>
 JWT_SECRET=<openssl rand -base64 32>
 CORS_ALLOWED_ORIGINS=https://votre-frontend.onrender.com
 UPLOAD_DIR=/tmp/carnet-uploads
-JAVA_VERSION=21
 ```
 
 Lier la base PostgreSQL au service (Render injecte `DATABASE_URL`).
@@ -121,8 +119,8 @@ Pour les photos en production : brancher **Cloudinary** ou **AWS S3** (évolutio
 **Base de données connection refused**
 → Utiliser l'**Internal Database URL**, pas l'External
 
-**Build Java échoue**
-→ Vérifier `JAVA_VERSION=21` dans les variables
+**Build Docker échoue**
+→ Vérifier les logs Render ; le `Dockerfile` dans `backend/` utilise Java 21
 
 ---
 
