@@ -9,8 +9,8 @@ RUN mvn clean package -DskipTests -B
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app \
-    && mkdir -p /tmp/carnet-uploads \
-    && chown -R app:app /tmp/carnet-uploads
+    && mkdir -p /tmp/carnet-uploads /tmp/carnet-data \
+    && chown -R app:app /tmp/carnet-uploads /tmp/carnet-data
 USER app
 COPY --from=build /app/target/carnet-echange-0.0.1-SNAPSHOT.jar app.jar
 ENV JAVA_OPTS="-Xmx384m -Xms128m"

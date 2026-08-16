@@ -2,9 +2,8 @@
 
 ## Si l'API est en "Failed deploy"
 
-1. Render → **carnet-echange-api** → **Environment**
-2. **Supprime** `DATABASE_URL` si elle ne commence **pas** par `postgresql://`
-3. Render → **Blueprint** → **Sync** (réinjecte `DATABASE_URL` + `PGHOST` depuis `carnet-db`)
+Sans `DATABASE_URL`, l'API démarre quand même (base H2 temporaire).
+Pour Postgres persistant : Render → **Blueprint** → **Sync**.
 
 ---
 
