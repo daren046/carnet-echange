@@ -1,139 +1,47 @@
-# Déploiement sur Render
+# Déploiement Render — Carnet d'Échange
 
-Guide pas à pas pour mettre **Carnet d'Échange** en ligne gratuitement.
+## Si l'API est en "Failed deploy"
 
----
-
-## Prérequis
-
-1. Compte [Render](https://render.com) (gratuit)
-2. Projet poussé sur **GitHub** ou **GitLab**
-
----
-
-## Méthode 1 — Blueprint (recommandée)
-
-Le fichier `render.yaml` à la racine crée automatiquement :
-- **PostgreSQL** (`carnet-db`)
-- **API** Spring Boot (`carnet-echange-api`)
-- **Frontend** React (`carnet-echange-web`)
-
-### Étapes
-
-1. Push le code sur GitHub
-2. Render → **New** → **Blueprint**
-3. Connecter le dépôt → Render détecte `render.yaml`
-4. **Avant de déployer**, renseigner les variables manuelles :
-
-| Service | Variable | Valeur |
-|---------|----------|--------|
-| **API** | `JWT_SECRET` | Secret Base64 (256 bits) — `openssl rand -base64 32` |
-| **API** | `CORS_ALLOWED_ORIGINS` | URL du frontend Render (ex. `https://carnet-echange-web.onrender.com`) |
-| **Web** | `VITE_API_URL` | URL de l'API (ex. `https://carnet-echange-api.onrender.com/api/v1`) |
-
-5. Cliquer **Apply** → attendre le déploiement (~5-10 min)
-
-6. **Redéployer le frontend** une fois l'URL de l'API connue (variable `VITE_API_URL` utilisée au build)
+1. Render → **carnet-echange-api** → **Environment**
+2. **Supprime** ces variables si présentes (elles bloquent le bon fonctionnement) :
+   - `DATABASE_URL` (surtout si ce n'est pas une URL `postgresql://...`)
+   - `VITE_API_URL` (ne va que sur le frontend)
+3. Render → ton **Blueprint** → **Sync** (réapplique `render.yaml`)
+4. Attends 5–10 min le redéploiement
 
 ---
 
-## Méthode 2 — Manuelle
+## Déploiement initial
 
-### A. Base PostgreSQL
-
-1. Render → **New** → **PostgreSQL**
-2. Name : `carnet-db`, Plan : **Free**
-3. Noter l'**Internal Database URL**
-
-### B. Backend (Web Service)
-
-| Champ | Valeur |
-|-------|--------|
-| Runtime | **Docker** |
-| Root Directory | `backend` |
-| Dockerfile | `backend/Dockerfile` |
-| Health Check | `/api/v1/health` |
-
-**Variables d'environnement :**
-
-```
-DATABASE_URL=<Internal Database URL from PostgreSQL>
-JWT_SECRET=<openssl rand -base64 32>
-CORS_ALLOWED_ORIGINS=https://votre-frontend.onrender.com
-UPLOAD_DIR=/tmp/carnet-uploads
-```
-
-Lier la base PostgreSQL au service (Render injecte `DATABASE_URL`).
-
-### C. Frontend (Static Site)
-
-| Champ | Valeur |
-|-------|--------|
-| Root Directory | `frontend` |
-| Build Command | `npm install && npm run build` |
-| Publish Directory | `dist` |
-
-**Variable :**
-
-```
-VITE_API_URL=https://votre-api.onrender.com/api/v1
-```
-
-**Rewrite rule** (SPA React Router) :
-- Render → Settings → Redirects/Rewrites
-- Source : `/*` → Destination : `/index.html` (Rewrite)
+1. [render.com](https://render.com) → **New** → **Blueprint**
+2. Repo : `daren046/carnet-echange`
+3. **Apply** — plus rien à saisir à la main (tout est dans `render.yaml`)
 
 ---
 
-## Vérification
+## URLs après déploiement
 
-| Test | URL |
-|------|-----|
-| API health | `https://carnet-echange-api.onrender.com/api/v1/health` |
-| Frontend | `https://carnet-echange-web.onrender.com` |
+| Service | URL |
+|---------|-----|
+| Frontend | https://carnet-echange-web.onrender.com |
+| API health | https://carnet-echange-api.onrender.com/api/v1/health |
 | Login démo | `demo@carnet.fr` / `demo1234` |
 
 ---
 
-## Limitations plan gratuit Render
+## Variables (automatiques via render.yaml)
 
-| Point | Détail |
-|-------|--------|
-| **Cold start** | L'API s'endort après 15 min d'inactivité (~30 s au réveil) |
-| **Photos uploadées** | Stockées en `/tmp` — **perdues au redéploiement** |
-| **Livres démo** | Photos Unsplash → OK |
-| **PostgreSQL free** | Expire après 90 jours (backup avant) |
+**API** : `RENDER_DATABASE_URL`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `UPLOAD_DIR`
 
-Pour les photos en production : brancher **Cloudinary** ou **AWS S3** (évolution future).
+**Frontend** : `VITE_API_URL`
 
 ---
 
-## Dépannage
+## Dépannage rapide
 
-**CORS error dans le navigateur**
-→ Vérifier `CORS_ALLOWED_ORIGINS` = URL exacte du frontend (sans `/` final)
-
-**Frontend n'appelle pas l'API**
-→ Vérifier `VITE_API_URL` et **redéployer** le frontend (variable lue au build)
-
-**Base de données connection refused**
-→ Utiliser l'**Internal Database URL**, pas l'External
-
-**Build Docker échoue**
-→ Vérifier les logs Render ; le `Dockerfile` dans `backend/` utilise Java 21
-
----
-
-## Commandes utiles
-
-Générer un JWT secret :
-```bash
-openssl rand -base64 32
-```
-
-Tester l'API en local avec PostgreSQL Render (External URL) :
-```powershell
-$env:DATABASE_URL="postgresql://..."
-$env:JWT_SECRET="votre-secret-base64"
-mvn spring-boot:run
-```
+| Problème | Solution |
+|----------|----------|
+| API Failed deploy | Supprimer `DATABASE_URL` manuelle, Sync Blueprint |
+| CORS error | `CORS_ALLOWED_ORIGINS` = URL exacte du frontend |
+| Frontend n'appelle pas l'API | Redéployer le frontend (Manual Deploy) |
+| API lente au 1er clic | Normal (plan free, cold start ~30 s) |

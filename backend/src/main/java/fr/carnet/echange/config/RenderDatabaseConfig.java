@@ -13,16 +13,16 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Render fournit DATABASE_URL au format postgres://user:pass@host[:port]/db
- * Spring Boot attend jdbc:postgresql://host:port/db + identifiants séparés.
+ * Render injecte RENDER_DATABASE_URL (via render.yaml + fromDatabase).
+ * Ne pas utiliser DATABASE_URL manuellement — format postgres://user:pass@host/db
  */
 @Configuration
-@ConditionalOnProperty(name = "DATABASE_URL")
+@ConditionalOnProperty(name = "RENDER_DATABASE_URL")
 public class RenderDatabaseConfig {
 
     @Bean
     @Primary
-    public DataSource renderDataSource(@Value("${DATABASE_URL}") String databaseUrl) {
+    public DataSource renderDataSource(@Value("${RENDER_DATABASE_URL}") String databaseUrl) {
         ParsedDbUrl parsed = ParsedDbUrl.parse(databaseUrl);
 
         HikariDataSource dataSource = new HikariDataSource();
@@ -30,15 +30,21 @@ public class RenderDatabaseConfig {
         dataSource.setJdbcUrl(parsed.jdbcUrl());
         dataSource.setUsername(parsed.username());
         dataSource.setPassword(parsed.password());
+        dataSource.setMaximumPoolSize(5);
         return dataSource;
     }
 
     record ParsedDbUrl(String jdbcUrl, String username, String password) {
 
         static ParsedDbUrl parse(String url) {
-            String normalized = url.replaceFirst("^postgres://", "postgresql://");
+            if (url == null || url.isBlank()) {
+                throw new IllegalArgumentException("RENDER_DATABASE_URL est vide");
+            }
+
+            String normalized = url.trim().replaceFirst("^postgres://", "postgresql://");
             if (!normalized.startsWith("postgresql://")) {
-                throw new IllegalArgumentException("Unsupported DATABASE_URL format");
+                throw new IllegalArgumentException(
+                        "RENDER_DATABASE_URL invalide (attendu postgresql://...). Valeur reçue : " + url);
             }
 
             URI uri = URI.create(normalized);
@@ -65,10 +71,5 @@ public class RenderDatabaseConfig {
         private static String decode(String value) {
             return URLDecoder.decode(value, StandardCharsets.UTF_8);
         }
-    }
-
-    /** Conservé pour compatibilité / tests — préférer {@link ParsedDbUrl#parse(String)}. */
-    static String toJdbcUrl(String url) {
-        return ParsedDbUrl.parse(url).jdbcUrl();
     }
 }

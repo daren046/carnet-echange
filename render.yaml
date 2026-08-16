@@ -1,5 +1,5 @@
 # Render Blueprint — Carnet d'Échange
-# Déployer : Render Dashboard → New → Blueprint → connecter le repo Git
+# Déployer : Render Dashboard → Blueprint → Sync (ou New → Blueprint)
 
 databases:
   - name: carnet-db
@@ -8,7 +8,7 @@ databases:
     user: carnet
 
 services:
-  # ─── API Spring Boot (Docker) ───
+  # ─── API Spring Boot ───
   - type: web
     name: carnet-echange-api
     runtime: docker
@@ -17,7 +17,7 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/v1/health
     envVars:
-      - key: DATABASE_URL
+      - key: RENDER_DATABASE_URL
         fromDatabase:
           name: carnet-db
           property: connectionString
@@ -28,7 +28,7 @@ services:
       - key: UPLOAD_DIR
         value: /tmp/carnet-uploads
 
-  # ─── Frontend React (Static Site — pas de champ plan, toujours gratuit) ───
+  # ─── Frontend React ───
   - type: web
     name: carnet-echange-web
     runtime: static
