@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #1e6b52;
+  --color-primary-dark: #155a43;
+  --color-accent: #f4a261;
+  --color-bg: #f8faf9;
+  --color-surface: #ffffff;
+}
+
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: var(--color-bg);
+  color: #1a2e28;
+  margin: 0;
+}

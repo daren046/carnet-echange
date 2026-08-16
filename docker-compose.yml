@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: carnet-echange-db
+    environment:
+      POSTGRES_DB: carnetechange
+      POSTGRES_USER: carnet
+      POSTGRES_PASSWORD: carnet123
+    ports:
+      - "5432:5432"
+    volumes:
+      - carnet_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carnet -d carnetechange"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  carnet_pg_data:
