@@ -28,11 +28,10 @@ services:
       - key: UPLOAD_DIR
         value: /tmp/carnet-uploads
 
-  # ─── Frontend React (Static Site) ───
+  # ─── Frontend React (Static Site — pas de champ plan, toujours gratuit) ───
   - type: web
     name: carnet-echange-web
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
