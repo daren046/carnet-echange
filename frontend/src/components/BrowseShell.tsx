@@ -64,8 +64,8 @@ export function BrowseShell({
                   key={cat.id}
                   type="button"
                   onClick={() => onCategoryChange(cat.id)}
-                  className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition ${
-                    active ? "bg-emerald-100 text-emerald-800" : "text-gray-600 hover:bg-gray-100"
+                  className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition ${
+                    active ? "bg-emerald-50 text-emerald-800" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                   }`}
                 >
                   {cat.id === "all" && <Star className="h-4 w-4 fill-current" />}
@@ -75,11 +75,11 @@ export function BrowseShell({
             })}
           </nav>
           {extraFilter && (
-            <div className="mt-4 border-t border-gray-200 pt-4">{extraFilter}</div>
+            <div className="mt-4 border-t border-slate-200 pt-4">{extraFilter}</div>
           )}
         </aside>
         <section className="min-w-0 flex-1 pb-16">
-          <h2 className="text-center text-sm font-bold tracking-[0.22em] text-gray-800 uppercase">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
             {galleryTitle}
           </h2>
           <div className="mt-8">{children}</div>

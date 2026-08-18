@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 import { toast } from "react-toastify";
 import { getZones, reserveBook, searchBooks } from "../api/client";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../components/BrowseShell";
 import { BookCard } from "../components/Navbar";
 import { Layout } from "../components/Layout";
+import { PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
   CONDITION_LABELS,
@@ -85,24 +86,21 @@ export function Catalog() {
     <Layout wide>
       <BrowseShell
         hero={
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
-            <p className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-gray-500">
-              <Sparkles className="h-4 w-4" />
-              TROUVEZ UN MANUEL INSTANTANÉMENT...
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6">
+            <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-500">
+              <Search className="h-4 w-4" />
+              Rechercher un manuel
             </p>
             <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row">
               <input
                 value={titleInput}
                 onChange={(e) => setTitleInput(e.target.value)}
-                placeholder="Titre du manuel, ex. Maths 4ème"
-                className="w-full flex-1 rounded-lg border border-gray-200 px-4 py-3 text-base focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                placeholder="Titre, ex. Maths 4ème"
+                className={`${inputClass} mt-0 py-3`}
               />
-              <button
-                type="submit"
-                className="shrink-0 rounded-lg bg-emerald-700 px-6 py-3 text-sm font-bold tracking-wide text-white hover:bg-emerald-800"
-              >
-                CONFIRMER &amp; RECHERCHER
-              </button>
+              <PrimaryButton type="submit" className="shrink-0 px-6 py-3">
+                Rechercher
+              </PrimaryButton>
             </form>
           </div>
         }
@@ -117,7 +115,7 @@ export function Catalog() {
                 setZoneFilter(val === "" ? "" : Number(val));
                 setMyZoneOnly(false);
               }}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className={`${inputClass} mt-0`}
             >
               <option value="">Toutes les zones</option>
               {zones.map((z) => (
@@ -125,7 +123,7 @@ export function Catalog() {
               ))}
             </select>
             {user?.zoneId && (
-              <label className="flex items-center gap-2 text-sm text-gray-600">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
                 <input
                   type="checkbox"
                   checked={myZoneOnly}
@@ -147,9 +145,9 @@ export function Catalog() {
         galleryTitle={categoryGalleryTitle(category)}
       >
         {loading ? (
-          <p className="py-16 text-center text-gray-500">Chargement...</p>
+          <p className="py-16 text-center text-sm text-slate-400">Chargement…</p>
         ) : books.length === 0 ? (
-          <p className="py-16 text-center text-gray-500">Aucun manuel disponible pour le moment.</p>
+          <p className="py-16 text-center text-sm text-slate-400">Aucun manuel disponible pour le moment.</p>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
             {books.map((book) => (
@@ -164,12 +162,9 @@ export function Catalog() {
                 }}
                 action={
                   user ? (
-                    <button
-                      onClick={() => handleReserve(book.id)}
-                      className="w-full rounded-xl bg-emerald-700 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-                    >
+                    <PrimaryButton onClick={() => handleReserve(book.id)} className="w-full">
                       Réserver (1 tampon + 1 000 F)
-                    </button>
+                    </PrimaryButton>
                   ) : undefined
                 }
               />

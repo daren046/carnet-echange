@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ShoppingBag, XCircle } from "lucide-react";
+import { XCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import { cancelOrder, getMyOrders } from "../api/client";
 import { AuthenticatedImage } from "../components/AuthenticatedImage";
 import { Layout } from "../components/Layout";
+import { Badge, EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { COPY_STATUS_LABELS, type Order } from "../types";
 
@@ -44,54 +45,40 @@ export function MyOrders() {
 
   return (
     <Layout>
-      <div className="flex items-center gap-3">
-        <ShoppingBag className="h-8 w-8 text-emerald-600" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mes commandes</h1>
-          <p className="text-gray-500">Suivez vos réservations et livraisons</p>
-        </div>
-      </div>
-
+      <PageHeader title="Mes commandes" subtitle="Suivez vos réservations et livraisons" />
       {loading ? (
-        <p className="mt-10 text-center text-gray-500">Chargement...</p>
+        <LoadingState />
       ) : orders.length === 0 ? (
-        <p className="mt-10 text-center text-gray-500">Aucune commande pour le moment.</p>
+        <EmptyState message="Aucune commande pour le moment." />
       ) : (
-        <div className="mt-8 space-y-4">
+        <div className="space-y-3">
           {orders.map((order) => (
-            <div key={order.reservationId} className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:flex-row">
+            <div key={order.reservationId} className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:flex-row sm:items-start">
               <AuthenticatedImage
                 src={order.photoUrl}
                 alt={order.bookTitle}
                 className="h-24 w-24 shrink-0 rounded-xl object-cover"
               />
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{order.bookTitle}</h3>
-                <p className="mt-1 text-sm text-gray-500">Zone : {order.zoneName}</p>
+                <h3 className="font-semibold text-slate-900">{order.bookTitle}</h3>
+                <p className="mt-1 text-sm text-slate-500">Zone {order.zoneName}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                    {COPY_STATUS_LABELS[order.bookStatus]}
-                  </span>
+                  <Badge tone="emerald">{COPY_STATUS_LABELS[order.bookStatus]}</Badge>
                   {order.deliveryStatus && (
-                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700">
-                      {DELIVERY_STATUS_LABELS[order.deliveryStatus]}
-                    </span>
+                    <Badge tone="orange">{DELIVERY_STATUS_LABELS[order.deliveryStatus]}</Badge>
                   )}
                 </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  Livraison : {order.deliveryFeePaid.toLocaleString()} F
+                <p className="mt-2 text-sm text-slate-600">
+                  Livraison {order.deliveryFeePaid.toLocaleString("fr-FR")} F
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                   {new Date(order.createdAt).toLocaleString("fr-FR")}
                 </p>
               </div>
               {order.cancellable && (
-                <button
-                  onClick={() => handleCancel(order.reservationId)}
-                  className="flex h-fit items-center gap-1 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
+                <PrimaryButton variant="danger" onClick={() => handleCancel(order.reservationId)}>
                   <XCircle className="h-4 w-4" /> Annuler
-                </button>
+                </PrimaryButton>
               )}
             </div>
           ))}

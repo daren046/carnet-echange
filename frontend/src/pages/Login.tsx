@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Layout } from "../components/Layout";
+import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { homePathFor } from "../utils/roles";
 
@@ -28,41 +29,24 @@ export function Login() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-        <p className="mt-1 text-gray-500">Accédez à votre carnet d&apos;échange</p>
-
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-emerald-700 py-3 font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-500">
+      <div className="mx-auto max-w-md pt-6">
+        <PageHeader title="Connexion" subtitle="Accédez à votre carnet d'échange" />
+        <Card>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Email</label>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Mot de passe</label>
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            </div>
+            <PrimaryButton type="submit" disabled={loading} className="w-full py-3">
+              {loading ? "Connexion..." : "Se connecter"}
+            </PrimaryButton>
+          </form>
+        </Card>
+        <p className="mt-5 text-center text-sm text-slate-500">
           Pas encore de compte ?{" "}
           <Link to="/register" className="font-medium text-emerald-700 hover:underline">
             S&apos;inscrire

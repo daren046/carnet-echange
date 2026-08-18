@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, Truck } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import { assignDelivery, getPendingDeliveries, markDelivered } from "../api/client";
 import { Layout } from "../components/Layout";
+import { Badge, EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
 import type { Delivery } from "../types";
 
 const STATUS_LABELS = {
@@ -10,6 +11,12 @@ const STATUS_LABELS = {
   IN_PROGRESS: "En cours",
   DELIVERED: "Livré",
 };
+
+function statusTone(status: Delivery["status"]) {
+  if (status === "PENDING") return "amber" as const;
+  if (status === "IN_PROGRESS") return "blue" as const;
+  return "green" as const;
+}
 
 export function Deliveries() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
@@ -50,61 +57,49 @@ export function Deliveries() {
 
   return (
     <Layout>
-      <div className="flex items-center gap-3">
-        <Truck className="h-8 w-8 text-orange-600" />
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Livraisons par zone</h1>
-          <p className="text-gray-500">Regroupez les livraisons d&apos;une même zone — 1 000 F par client</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Livraisons par zone"
+        subtitle="Regroupez les livraisons d'une même zone — 1 000 F par client"
+        accent="orange"
+      />
 
       {loading ? (
-        <p className="mt-10 text-center text-gray-500">Chargement...</p>
+        <LoadingState />
       ) : deliveries.length === 0 ? (
-        <p className="mt-10 text-center text-gray-500">Aucune livraison en attente.</p>
+        <EmptyState message="Aucune livraison en attente." />
       ) : (
-        <div className="mt-8 space-y-4">
+        <div className="space-y-3">
           {deliveries.map((d) => (
-            <div key={d.id} className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
+            <div key={d.id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Zone : {d.zoneName}</p>
-                  <p className="text-sm text-gray-500">
-                    {d.reservationCount} livre{d.reservationCount > 1 ? "s" : ""} — {d.deliveryFee.toLocaleString()} F / client
+                  <p className="font-semibold text-slate-900">Zone {d.zoneName}</p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    {d.reservationCount} livre{d.reservationCount > 1 ? "s" : ""} — {d.deliveryFee.toLocaleString("fr-FR")} F / client
                   </p>
-                  <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                    d.status === "PENDING" ? "bg-yellow-100 text-yellow-800"
-                    : d.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800"
-                    : "bg-green-100 text-green-800"
-                  }`}>
-                    {STATUS_LABELS[d.status]}
-                  </span>
+                  <div className="mt-2">
+                    <Badge tone={statusTone(d.status)}>{STATUS_LABELS[d.status]}</Badge>
+                  </div>
                   {d.delivererName && (
-                    <p className="mt-1 text-sm text-gray-600">Livreur : {d.delivererName}</p>
+                    <p className="mt-2 text-sm text-slate-500">Livreur : {d.delivererName}</p>
                   )}
                 </div>
                 <div className="flex gap-2">
                   {d.status === "PENDING" && (
-                    <button
-                      onClick={() => handleAssign(d.id)}
-                      className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
-                    >
+                    <PrimaryButton variant="orange" onClick={() => handleAssign(d.id)}>
                       Prendre en charge
-                    </button>
+                    </PrimaryButton>
                   )}
                   {d.status === "IN_PROGRESS" && (
-                    <button
-                      onClick={() => handleDelivered(d.id)}
-                      className="flex items-center gap-1 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-                    >
+                    <PrimaryButton onClick={() => handleDelivered(d.id)}>
                       <CheckCircle className="h-4 w-4" /> Livré
-                    </button>
+                    </PrimaryButton>
                   )}
                 </div>
               </div>
-              <ul className="mt-4 space-y-1 border-t border-gray-100 pt-4">
+              <ul className="mt-4 space-y-1.5 border-t border-slate-100 pt-4">
                 {d.bookTitles.map((title, i) => (
-                  <li key={i} className="text-sm text-gray-700">• {title}</li>
+                  <li key={i} className="text-sm text-slate-600">• {title}</li>
                 ))}
               </ul>
             </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getTransactions } from "../api/client";
 import { Layout } from "../components/Layout";
+import { EmptyState, LoadingState, PageHeader } from "../components/ui";
 import type { Transaction, TransactionType } from "../types";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
@@ -27,32 +28,30 @@ export function History() {
 
   return (
     <Layout>
-      <h1 className="text-2xl font-bold text-gray-900">Historique</h1>
-      <p className="mt-1 text-gray-500">Tous vos dons, récupérations et paiements</p>
-
+      <PageHeader title="Historique" subtitle="Tous vos dons, récupérations et paiements" />
       {loading ? (
-        <p className="mt-10 text-center text-gray-500">Chargement...</p>
+        <LoadingState />
       ) : transactions.length === 0 ? (
-        <p className="mt-10 text-center text-gray-500">Aucune transaction pour le moment.</p>
+        <EmptyState message="Aucune transaction pour le moment." />
       ) : (
-        <div className="mt-8 space-y-3">
+        <div className="space-y-2">
           {transactions.map((t) => (
-            <div key={t.id} className="flex items-start justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div key={t.id} className="flex items-start justify-between gap-4 rounded-xl border border-slate-200/80 bg-white px-4 py-4">
               <div>
-                <p className="font-medium text-gray-900">{TYPE_LABELS[t.type]}</p>
-                {t.bookTitle && <p className="text-sm text-gray-600">{t.bookTitle}</p>}
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="font-medium text-slate-900">{TYPE_LABELS[t.type]}</p>
+                {t.bookTitle && <p className="text-sm text-slate-500">{t.bookTitle}</p>}
+                <p className="mt-1 text-xs text-slate-400">
                   {new Date(t.createdAt).toLocaleString("fr-FR")}
                 </p>
               </div>
               <div className="text-right text-sm">
                 {t.stampDelta !== 0 && (
-                  <p className={t.stampDelta > 0 ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
+                  <p className={t.stampDelta > 0 ? "font-semibold text-emerald-700" : "font-semibold text-red-600"}>
                     {t.stampDelta > 0 ? "+" : ""}{t.stampDelta} tampon{t.stampDelta !== 1 && t.stampDelta !== -1 ? "s" : ""}
                   </p>
                 )}
                 {t.amount > 0 && (
-                  <p className="text-gray-600">{t.amount.toLocaleString()} F</p>
+                  <p className="tabular-nums text-slate-600">{t.amount.toLocaleString("fr-FR")} F</p>
                 )}
               </div>
             </div>

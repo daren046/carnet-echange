@@ -8,13 +8,19 @@ export function Layout({
   wide?: boolean;
 }) {
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Navbar />
       {wide ? (
-        <main>{children}</main>
+        <main className="flex-1">{children}</main>
       ) : (
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
       )}
+      <footer className="mt-auto border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>Carnet d&apos;Échange — échange de manuels scolaires par tampons</p>
+          <p>Livraison 1 000 F · regroupée par zone</p>
+        </div>
+      </footer>
     </div>
   );
 }
