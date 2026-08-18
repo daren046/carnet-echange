@@ -1,10 +1,20 @@
 import { Navbar } from "./Navbar";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({
+  children,
+  wide = false,
+}: {
+  children: React.ReactNode;
+  wide?: boolean;
+}) {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      {wide ? (
+        <main>{children}</main>
+      ) : (
+        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      )}
     </div>
   );
 }

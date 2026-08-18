@@ -129,16 +129,19 @@ export function Navbar() {
 export function BookCard({
   book,
   action,
+  size = "default",
 }: {
   book: { id: number; title: string; photoUrl: string; subject: string; level: string; condition: string; zoneName: string; libraryMode?: boolean };
   action?: React.ReactNode;
+  size?: "default" | "gallery";
 }) {
+  const gallery = size === "gallery";
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md">
-      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+      <div className={`overflow-hidden bg-gray-100 ${gallery ? "aspect-[16/10]" : "aspect-[4/3]"}`}>
         <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
       </div>
-      <div className="p-4">
+      <div className={gallery ? "p-5" : "p-4"}>
         <h3 className="font-semibold text-gray-900 line-clamp-2">{book.title}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
           <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">{book.level}</span>
