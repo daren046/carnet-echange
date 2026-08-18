@@ -1,9 +1,11 @@
 import axios from "axios";
 import type {
   ApiResponse,
+  AppNotification,
   AuthResponse,
   BookCopy,
   Delivery,
+  ImpactStats,
   LibraryLoan,
   MobileMoneyProvider,
   Order,
@@ -61,6 +63,43 @@ export async function register(payload: {
 
 export async function getMe() {
   const { data } = await api.get<ApiResponse<UserMe>>("/auth/me");
+  return data;
+}
+
+export async function updateProfile(payload: {
+  firstName: string;
+  lastName: string;
+  schoolLevel?: SchoolLevel | null;
+  zoneCode: string;
+  currentPassword?: string;
+  newPassword?: string;
+}) {
+  const { data } = await api.put<ApiResponse<UserMe>>("/auth/me", payload);
+  return data;
+}
+
+export async function getNotifications() {
+  const { data } = await api.get<ApiResponse<AppNotification[]>>("/notifications");
+  return data;
+}
+
+export async function getUnreadNotificationCount() {
+  const { data } = await api.get<ApiResponse<{ count: number }>>("/notifications/unread-count");
+  return data;
+}
+
+export async function markNotificationRead(id: number) {
+  const { data } = await api.post<ApiResponse<null>>(`/notifications/${id}/read`);
+  return data;
+}
+
+export async function markAllNotificationsRead() {
+  const { data } = await api.post<ApiResponse<null>>("/notifications/read-all");
+  return data;
+}
+
+export async function getImpactStats() {
+  const { data } = await api.get<ApiResponse<ImpactStats>>("/stats");
   return data;
 }
 

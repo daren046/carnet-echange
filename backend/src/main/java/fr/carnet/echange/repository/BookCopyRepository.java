@@ -32,4 +32,6 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
     );
 
     List<BookCopy> findByDepositorIdOrderByCreatedAtDesc(Long depositorId);
+
+    long countByStatus(CopyStatus status);
 }

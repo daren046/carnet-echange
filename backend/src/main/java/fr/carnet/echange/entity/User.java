@@ -107,4 +107,8 @@ public class User implements UserDetails {
     public void setDepositBalance(int depositBalance) { this.depositBalance = depositBalance; }
     public void setWalletBalance(int walletBalance) { this.walletBalance = walletBalance; }
     public void setZone(Zone zone) { this.zone = zone; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setPassword(String password) { this.password = password; }
+    public void setSchoolLevel(SchoolLevel schoolLevel) { this.schoolLevel = schoolLevel; }
 }

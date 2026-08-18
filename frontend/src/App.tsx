@@ -15,7 +15,10 @@ import { MyDeposits } from "./pages/MyDeposits";
 import { MyOrders } from "./pages/MyOrders";
 import { WalletPage } from "./pages/WalletPage";
 import { Deliveries } from "./pages/Deliveries";
+import { Profile } from "./pages/Profile";
+import { About } from "./pages/About";
 import { isDelivererOnly } from "./utils/roles";
+
 function StudentRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -35,6 +38,13 @@ function DelivererRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AuthenticatedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function HomeRouter() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -48,6 +58,9 @@ function AppRoutes() {
       <Route path="/" element={<HomeRouter />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/a-propos" element={<About />} />
+
+      <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
 
       {/* Espace livreur */}
       <Route path="/deliverer" element={<DelivererRoute><DelivererHome /></DelivererRoute>} />

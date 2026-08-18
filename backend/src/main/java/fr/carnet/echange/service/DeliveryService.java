@@ -5,6 +5,7 @@ import fr.carnet.echange.dto.delivery.OrderDto;
 import fr.carnet.echange.entity.*;
 import fr.carnet.echange.enums.CopyStatus;
 import fr.carnet.echange.enums.DeliveryStatus;
+import fr.carnet.echange.enums.NotificationType;
 import fr.carnet.echange.enums.TransactionType;
 import fr.carnet.echange.enums.UserRole;
 import fr.carnet.echange.repository.DeliveryRepository;
@@ -23,6 +24,7 @@ public class DeliveryService {
     private final BookCopyService bookCopyService;
     private final StampService stampService;
     private final WalletService walletService;
+    private final NotificationService notificationService;
 
     @Value("${app.delivery-fee}")
     private int deliveryFee;
@@ -31,12 +33,14 @@ public class DeliveryService {
                            ReservationRepository reservationRepository,
                            BookCopyService bookCopyService,
                            StampService stampService,
-                           WalletService walletService) {
+                           WalletService walletService,
+                           NotificationService notificationService) {
         this.deliveryRepository = deliveryRepository;
         this.reservationRepository = reservationRepository;
         this.bookCopyService = bookCopyService;
         this.stampService = stampService;
         this.walletService = walletService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,6 +78,11 @@ public class DeliveryService {
         walletService.debit(user, deliveryFee, TransactionType.DELIVERY_PAYMENT, copy,
                 "Paiement livraison (" + deliveryFee + " F)");
 
+        notificationService.notify(copy.getDepositor(), NotificationType.BOOK_RESERVED,
+                "Livre réservé",
+                user.getFirstName() + " a réservé « " + copy.getTitle() + " ».",
+                "/my-deposits");
+
         return toDto(delivery);
     }
 
@@ -98,6 +107,11 @@ public class DeliveryService {
 
         copy.setStatus(CopyStatus.AVAILABLE);
         copy.setReservedBy(null);
+
+        notificationService.notify(copy.getDepositor(), NotificationType.BOOK_AVAILABLE,
+                "Réservation annulée",
+                "« " + copy.getTitle() + " » est de nouveau disponible.",
+                "/my-deposits");
 
         OrderDto result = toOrderDto(reservation, copy, delivery);
         result = new OrderDto(
@@ -152,7 +166,13 @@ public class DeliveryService {
                 .orElseThrow(() -> new IllegalArgumentException("Livraison introuvable"));
         delivery.setDeliverer(deliverer);
         delivery.setStatus(DeliveryStatus.IN_PROGRESS);
-        delivery.getReservations().forEach(r -> r.getBookCopy().setStatus(CopyStatus.IN_DELIVERY));
+        delivery.getReservations().forEach(r -> {
+            r.getBookCopy().setStatus(CopyStatus.IN_DELIVERY);
+            notificationService.notify(r.getUser(), NotificationType.DELIVERY_STARTED,
+                    "Livreur en route",
+                    "Votre commande « " + r.getBookCopy().getTitle() + " » est en cours de livraison.",
+                    "/my-orders");
+        });
         return toDto(deliveryRepository.save(delivery));
     }
 
@@ -164,7 +184,18 @@ public class DeliveryService {
             throw new IllegalStateException("Cette livraison ne vous est pas assignée");
         }
         delivery.setStatus(DeliveryStatus.DELIVERED);
-        delivery.getReservations().forEach(r -> r.getBookCopy().setStatus(CopyStatus.DELIVERED));
+        delivery.getReservations().forEach(r -> {
+            BookCopy copy = r.getBookCopy();
+            copy.setStatus(CopyStatus.DELIVERED);
+            notificationService.notify(r.getUser(), NotificationType.DELIVERED,
+                    "Livre livré",
+                    "« " + copy.getTitle() + " » a été remis. Bonne lecture !",
+                    "/my-orders");
+            notificationService.notify(copy.getDepositor(), NotificationType.DELIVERED,
+                    "Votre dépôt a été livré",
+                    "« " + copy.getTitle() + " » a bien été remis au destinataire.",
+                    "/my-deposits");
+        });
         return toDto(deliveryRepository.save(delivery));
     }
 

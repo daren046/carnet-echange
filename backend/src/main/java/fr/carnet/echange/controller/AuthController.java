@@ -4,6 +4,7 @@ import fr.carnet.echange.dto.ApiResponse;
 import fr.carnet.echange.dto.auth.AuthResponse;
 import fr.carnet.echange.dto.auth.LoginDto;
 import fr.carnet.echange.dto.auth.RegisterDto;
+import fr.carnet.echange.dto.auth.UpdateProfileDto;
 import fr.carnet.echange.dto.auth.UserMeDto;
 import fr.carnet.echange.entity.User;
 import fr.carnet.echange.service.AuthService;
@@ -36,5 +37,12 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<UserMeDto> me(Authentication authentication) {
         return ApiResponse.ok(authService.getCurrentUser(authentication));
+    }
+
+    @PutMapping("/me")
+    public ApiResponse<UserMeDto> updateMe(Authentication authentication,
+                                           @Valid @RequestBody UpdateProfileDto dto) {
+        User user = (User) authentication.getPrincipal();
+        return ApiResponse.ok("Profil mis à jour", authService.updateProfile(user, dto));
     }
 }

@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   BookOpen,
   ChevronDown,
+  CircleUser,
+  HelpCircle,
   History,
   Home,
   Library,
@@ -15,6 +17,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AuthenticatedImage } from "./AuthenticatedImage";
+import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../context/AuthContext";
 import { isDelivererOnly } from "../utils/roles";
 
@@ -26,15 +29,19 @@ const primaryNav = [
 ];
 
 const accountNav = [
+  { to: "/profile", label: "Mon compte", icon: CircleUser },
   { to: "/my-deposits", label: "Mes dépôts", icon: Package },
   { to: "/my-orders", label: "Commandes", icon: ShoppingBag },
   { to: "/wallet", label: "Mobile Money", icon: Wallet },
   { to: "/history", label: "Historique", icon: History },
+  { to: "/a-propos", label: "Impact & FAQ", icon: HelpCircle },
 ];
 
 const delivererNavItems = [
   { to: "/deliverer", label: "Tableau de bord", icon: Home },
   { to: "/deliveries", label: "Livraisons", icon: Truck },
+  { to: "/profile", label: "Mon compte", icon: CircleUser },
+  { to: "/a-propos", label: "Impact & FAQ", icon: HelpCircle },
 ];
 
 function navLinkClass(active: boolean, deliverer: boolean) {
@@ -171,6 +178,7 @@ export function Navbar() {
                   </span>
                 </div>
               )}
+              <NotificationBell />
               <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white ${
@@ -198,6 +206,12 @@ export function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-2">
+              <Link
+                to="/a-propos"
+                className="hidden rounded-lg px-3 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50 sm:inline"
+              >
+                Impact & FAQ
+              </Link>
               <Link
                 to="/login"
                 className="rounded-lg px-3 py-2 text-[13px] font-medium text-slate-600 hover:bg-slate-50"

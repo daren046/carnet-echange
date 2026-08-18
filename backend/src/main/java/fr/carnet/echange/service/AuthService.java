@@ -3,9 +3,11 @@ package fr.carnet.echange.service;
 import fr.carnet.echange.dto.auth.AuthResponse;
 import fr.carnet.echange.dto.auth.LoginDto;
 import fr.carnet.echange.dto.auth.RegisterDto;
+import fr.carnet.echange.dto.auth.UpdateProfileDto;
 import fr.carnet.echange.dto.auth.UserMeDto;
 import fr.carnet.echange.entity.User;
 import fr.carnet.echange.entity.Zone;
+import fr.carnet.echange.enums.NotificationType;
 import fr.carnet.echange.enums.UserRole;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
@@ -25,16 +27,19 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final StampService stampService;
+    private final NotificationService notificationService;
 
     public AuthService(UserRepository userRepository, ZoneRepository zoneRepository,
                        PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
-                       JwtService jwtService, StampService stampService) {
+                       JwtService jwtService, StampService stampService,
+                       NotificationService notificationService) {
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.stampService = stampService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -61,6 +66,10 @@ public class AuthService {
         );
         user = userRepository.save(user);
         stampService.grantWelcomeBonus(user);
+        notificationService.notify(user, NotificationType.WELCOME,
+                "Bienvenue sur Carnet d'Échange",
+                "Vous avez reçu 1 tampon de bienvenue. Déposez un manuel ou parcourez le catalogue.",
+                "/catalog");
         return user;
     }
 
@@ -77,6 +86,31 @@ public class AuthService {
     public UserMeDto getCurrentUser(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         return toUserMeDto(user);
+    }
+
+    @Transactional
+    public UserMeDto updateProfile(User user, UpdateProfileDto dto) {
+        Zone zone = zoneRepository.findByCode(dto.zoneCode())
+                .orElseThrow(() -> new IllegalArgumentException("Zone inconnue : " + dto.zoneCode()));
+
+        user.setFirstName(dto.firstName().trim());
+        user.setLastName(dto.lastName().trim());
+        user.setZone(zone);
+        if (user.getRole() == UserRole.STUDENT || user.getRole() == UserRole.PARENT) {
+            user.setSchoolLevel(dto.schoolLevel());
+        }
+
+        if (dto.newPassword() != null && !dto.newPassword().isBlank()) {
+            if (dto.newPassword().length() < 6) {
+                throw new IllegalArgumentException("Le mot de passe doit contenir au moins 6 caractères");
+            }
+            if (dto.currentPassword() == null || !passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
+                throw new IllegalArgumentException("Mot de passe actuel incorrect");
+            }
+            user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        }
+
+        return toUserMeDto(userRepository.save(user));
     }
 
     public UserMeDto toUserMeDto(User user) {

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Navbar } from "./Navbar";
 
 export function Layout({
@@ -18,7 +19,7 @@ export function Layout({
       <footer className="mt-auto border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>Carnet d&apos;Échange — échange de manuels scolaires par tampons</p>
-          <p>Livraison 1 000 F · regroupée par zone</p>
+          <Link to="/a-propos" className="text-emerald-700 hover:underline">Impact & FAQ</Link>
         </div>
       </footer>
     </div>

@@ -47,7 +47,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
                                 "/api/v1/zones",
-                                "/api/v1/health"
+                                "/api/v1/health",
+                                "/api/v1/stats"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

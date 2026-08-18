@@ -8,8 +8,11 @@ import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
 import fr.carnet.echange.enums.UserRole;
 import fr.carnet.echange.repository.BookCopyRepository;
+import fr.carnet.echange.repository.NotificationRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
+import fr.carnet.echange.entity.Notification;
+import fr.carnet.echange.enums.NotificationType;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -20,13 +23,17 @@ public class DataLoader implements CommandLineRunner {
     private final ZoneRepository zoneRepository;
     private final UserRepository userRepository;
     private final BookCopyRepository bookCopyRepository;
+    private final NotificationRepository notificationRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataLoader(ZoneRepository zoneRepository, UserRepository userRepository,
-                      BookCopyRepository bookCopyRepository, PasswordEncoder passwordEncoder) {
+                      BookCopyRepository bookCopyRepository,
+                      NotificationRepository notificationRepository,
+                      PasswordEncoder passwordEncoder) {
         this.zoneRepository = zoneRepository;
         this.userRepository = userRepository;
         this.bookCopyRepository = bookCopyRepository;
+        this.notificationRepository = notificationRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -35,6 +42,7 @@ public class DataLoader implements CommandLineRunner {
         seedZones();
         seedUsers();
         seedBooks();
+        seedDemoNotifications();
     }
 
     private void seedZones() {
@@ -149,6 +157,26 @@ public class DataLoader implements CommandLineRunner {
                 BookCondition.NEUF, img(16), demo, nord, true);
 
         System.out.println("✅ " + bookCopyRepository.count() + " manuels d'exemple chargés");
+    }
+
+    private void seedDemoNotifications() {
+        if (notificationRepository.count() > 0) {
+            return;
+        }
+        User demo = userRepository.findByEmail("demo@carnet.fr").orElse(null);
+        User livreur = userRepository.findByEmail("livreur@carnet.fr").orElse(null);
+        if (demo != null) {
+            notificationRepository.save(new Notification(demo, NotificationType.WELCOME,
+                    "Bienvenue Marie",
+                    "Vous avez 1 tampon et 10 000 F. Explorez le catalogue ou déposez un manuel.",
+                    "/catalog"));
+        }
+        if (livreur != null) {
+            notificationRepository.save(new Notification(livreur, NotificationType.DELIVERY_STARTED,
+                    "Nouvelle tournée possible",
+                    "Des livraisons attendent dans votre secteur. Consultez l'espace livreur.",
+                    "/deliveries"));
+        }
     }
 
     private void saveBook(String title, Subject subject, SchoolLevel level, BookCondition condition,

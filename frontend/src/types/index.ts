@@ -41,6 +41,31 @@ export interface UserMe {
   walletBalance: number;
 }
 
+export type NotificationType =
+  | "WELCOME"
+  | "BOOK_RESERVED"
+  | "BOOK_AVAILABLE"
+  | "DELIVERY_STARTED"
+  | "DELIVERED";
+
+export interface AppNotification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface ImpactStats {
+  booksDeposited: number;
+  booksAvailable: number;
+  booksDelivered: number;
+  members: number;
+  estimatedSavedCfa: number;
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
