@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { getMyDeposits } from "../api/client";
 import { AuthenticatedImage } from "../components/AuthenticatedImage";
+import { levelCategoryLabel, listingSubjectLabel } from "../components/BrowseShell";
 import { Layout } from "../components/Layout";
 import { Badge, EmptyState, LoadingState, PageHeader } from "../components/ui";
 import {
   CONDITION_LABELS,
   COPY_STATUS_LABELS,
-  LEVEL_LABELS,
-  SUBJECT_LABELS,
+  formatCfa,
+  OFFER_TYPE_LABELS,
   type BookCopy,
 } from "../types";
 
@@ -46,10 +47,22 @@ export function MyDeposits() {
               <div className="p-4">
                 <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {book.level && <Badge tone="emerald">{LEVEL_LABELS[book.level]}</Badge>}
-                  <Badge>{SUBJECT_LABELS[book.subject]}</Badge>
+                  {book.listingCategory === "BOOKS" && levelCategoryLabel(book.level) && (
+                    <Badge tone="emerald">{levelCategoryLabel(book.level)}</Badge>
+                  )}
+                  {listingSubjectLabel(book.listingCategory, book.subject) && (
+                    <Badge>{listingSubjectLabel(book.listingCategory, book.subject)}</Badge>
+                  )}
                   <Badge>{CONDITION_LABELS[book.condition]}</Badge>
+                  {!book.libraryMode && (
+                    <Badge>{OFFER_TYPE_LABELS[book.offerType] ?? "Échange"}</Badge>
+                  )}
                 </div>
+                {book.offerType === "SALE" && book.expectedPrice != null && book.listingCategory !== "BOOKS" && (
+                  <p className="mt-2 text-sm font-medium text-amber-800">
+                    Prix indicatif : {formatCfa(book.expectedPrice)}
+                  </p>
+                )}
                 <div className="mt-3 flex items-center justify-between">
                   <Badge tone={statusTone(book.status)}>{COPY_STATUS_LABELS[book.status]}</Badge>
                   {book.reservedByName && book.status !== "AVAILABLE" && (

@@ -7,6 +7,8 @@ import {
   bookMatchesCategory,
   categoryGalleryTitle,
   isSubjectCategory,
+  levelCategoryLabel,
+  listingSubjectLabel,
   type CategoryId,
 } from "../components/BrowseShell";
 import { BookCard } from "../components/Navbar";
@@ -15,8 +17,6 @@ import { PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
   CONDITION_LABELS,
-  LEVEL_LABELS,
-  SUBJECT_LABELS,
   type BookCopy,
   type Zone,
 } from "../types";
@@ -157,8 +157,8 @@ export function Catalog() {
                 size="gallery"
                 book={{
                   ...book,
-                  level: book.level ? LEVEL_LABELS[book.level] : null,
-                  subject: SUBJECT_LABELS[book.subject],
+                  level: levelCategoryLabel(book.level),
+                  subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                 }}
                 action={

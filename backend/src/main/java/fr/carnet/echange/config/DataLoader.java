@@ -15,6 +15,7 @@ import fr.carnet.echange.repository.ZoneRepository;
 import fr.carnet.echange.entity.Notification;
 import fr.carnet.echange.enums.ListingCategory;
 import fr.carnet.echange.enums.NotificationType;
+import fr.carnet.echange.enums.OfferType;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -49,6 +50,7 @@ public class DataLoader implements CommandLineRunner {
         seedMiscItems();
         seedDemoNotifications();
         migrateListingCategory();
+        migrateOfferType();
     }
 
     private void seedZones() {
@@ -113,6 +115,12 @@ public class DataLoader implements CommandLineRunner {
             userRepository.save(seller);
         }
 
+        if (userRepository.findByEmail("admin@carnet.fr").isEmpty()) {
+            Zone centre = zoneRepository.findByCode("CENTRE").orElseThrow();
+            userRepository.save(new User("Équipe", "Perso", "admin@carnet.fr",
+                    passwordEncoder.encode("demo1234"), UserRole.ADMIN, null, centre));
+        }
+
         if (userRepository.findByEmail("anonyme@perso.local").isEmpty()) {
             Zone centre = zoneRepository.findByCode("CENTRE").orElseThrow();
             User anon = new User("Utilisateur", "Anonyme", "anonyme@perso.local",
@@ -138,49 +146,49 @@ public class DataLoader implements CommandLineRunner {
 
         // ——— Collège ———
         saveBook("Transmath 6ème — Nathan", Subject.MATHEMATIQUES, SchoolLevel.SIXIEME,
-                BookCondition.BON, img(0), demo, nord, false);
+                BookCondition.BON, img(0), demo, nord, false, OfferType.EXCHANGE, null);
         saveBook("Français 6ème — Hachette", Subject.FRANCAIS, SchoolLevel.SIXIEME,
-                BookCondition.BON, img(1), karim, centre, false);
+                BookCondition.BON, img(1), karim, centre, false, OfferType.DONATION, null);
         saveBook("Histoire-Géo 5ème — Belin", Subject.HISTOIRE_GEO, SchoolLevel.CINQUIEME,
-                BookCondition.MOYEN, img(2), paul, sud, false);
+                BookCondition.MOYEN, img(2), paul, sud, false, OfferType.EXCHANGE, null);
         saveBook("Transmath 5ème — Nathan", Subject.MATHEMATIQUES, SchoolLevel.CINQUIEME,
-                BookCondition.BON, img(3), paul, sud, false);
+                BookCondition.BON, img(3), paul, sud, false, OfferType.SALE, null);
         saveBook("Enjoy English 4ème — Didier", Subject.ANGLAIS, SchoolLevel.QUATRIEME,
-                BookCondition.BON, img(4), karim, centre, false);
+                BookCondition.BON, img(4), karim, centre, false, OfferType.EXCHANGE, null);
         saveBook("SVT 5ème — Bordas", Subject.SVT, SchoolLevel.CINQUIEME,
-                BookCondition.BON, img(5), paul, sud, false);
+                BookCondition.BON, img(5), paul, sud, false, OfferType.DONATION, null);
         saveBook("Physique-Chimie 3ème — Hatier", Subject.PHYSIQUE_CHIMIE, SchoolLevel.TROISIEME,
-                BookCondition.MOYEN, img(6), karim, centre, false);
+                BookCondition.MOYEN, img(6), karim, centre, false, OfferType.SALE, null);
         saveBook("Technologie 4ème — Delagrave", Subject.TECHNOLOGIE, SchoolLevel.QUATRIEME,
-                BookCondition.BON, img(7), demo, nord, false);
+                BookCondition.BON, img(7), demo, nord, false, OfferType.EXCHANGE, null);
 
         // ——— Lycée ———
         saveBook("Maths Seconde — Transmath", Subject.MATHEMATIQUES, SchoolLevel.SECONDE,
-                BookCondition.NEUF, img(8), karim, centre, false);
+                BookCondition.NEUF, img(8), karim, centre, false, OfferType.SALE, null);
         saveBook("Espagnol LV2 — Première", Subject.ESPAGNOL, SchoolLevel.PREMIERE,
-                BookCondition.BON, img(9), paul, sud, false);
+                BookCondition.BON, img(9), paul, sud, false, OfferType.EXCHANGE, null);
         saveBook("Physique-Chimie Terminale — Bordas", Subject.PHYSIQUE_CHIMIE, SchoolLevel.TERMINALE,
-                BookCondition.BON, img(10), karim, centre, false);
+                BookCondition.BON, img(10), karim, centre, false, OfferType.DONATION, null);
 
         // ——— Université ———
         saveBook("Introduction à l'économie — Licence", Subject.AUTRE, SchoolLevel.UNIVERSITE,
-                BookCondition.BON, img(7), karim, centre, false);
+                BookCondition.BON, img(7), karim, centre, false, OfferType.EXCHANGE, null);
 
         // ——— Primaire (déposés par un parent) ———
         saveBook("J'apprends à lire — CP", Subject.FRANCAIS, SchoolLevel.CP,
-                BookCondition.BON, img(11), sophie, est, false);
+                BookCondition.BON, img(11), sophie, est, false, OfferType.DONATION, null);
         saveBook("Mon livre de maths CM2", Subject.MATHEMATIQUES, SchoolLevel.CM2,
-                BookCondition.MOYEN, img(12), sophie, est, false);
+                BookCondition.MOYEN, img(12), sophie, est, false, OfferType.EXCHANGE, null);
         saveBook("Histoire-Géo CM1 — Magnard", Subject.HISTOIRE_GEO, SchoolLevel.CM1,
-                BookCondition.BON, img(13), sophie, est, false);
+                BookCondition.BON, img(13), sophie, est, false, OfferType.SALE, null);
 
         // ——— Bibliothèque (emprunt avec caution) ———
         saveBook("Le Petit Prince — Saint-Exupéry", Subject.FRANCAIS, SchoolLevel.CM2,
-                BookCondition.BON, img(14), sophie, est, true);
+                BookCondition.BON, img(14), sophie, est, true, OfferType.EXCHANGE, null);
         saveBook("Harry Potter à l'école des sorciers", Subject.FRANCAIS, SchoolLevel.CM1,
-                BookCondition.BON, img(15), paul, sud, true);
+                BookCondition.BON, img(15), paul, sud, true, OfferType.EXCHANGE, null);
         saveBook("L'Arabe facile — initiation", Subject.AUTRE, SchoolLevel.SIXIEME,
-                BookCondition.NEUF, img(16), demo, nord, true);
+                BookCondition.NEUF, img(16), demo, nord, true, OfferType.EXCHANGE, null);
 
         System.out.println("✅ " + bookCopyRepository.count() + " manuels d'exemple chargés");
     }
@@ -199,12 +207,12 @@ public class DataLoader implements CommandLineRunner {
         Zone est = zoneRepository.findByCode("EST").orElseThrow();
 
         saveBook("Maths 4ème — Transmath", Subject.MATHEMATIQUES, SchoolLevel.QUATRIEME,
-                BookCondition.BON, img(3), seller, est, false);
+                BookCondition.BON, img(3), seller, est, false, OfferType.SALE, null);
         saveBook("Français 3ème — Hatier", Subject.FRANCAIS, SchoolLevel.TROISIEME,
-                BookCondition.NEUF, img(1), seller, est, false);
+                BookCondition.NEUF, img(1), seller, est, false, OfferType.SALE, null);
 
         BookCopy reserved = saveBook("Anglais 5ème — Enjoy English", Subject.ANGLAIS, SchoolLevel.CINQUIEME,
-                BookCondition.BON, img(4), seller, est, false);
+                BookCondition.BON, img(4), seller, est, false, OfferType.SALE, null);
         reserved.setStatus(CopyStatus.RESERVED);
         if (demo != null) {
             reserved.setReservedBy(demo);
@@ -212,7 +220,7 @@ public class DataLoader implements CommandLineRunner {
         bookCopyRepository.save(reserved);
 
         BookCopy delivered = saveBook("Histoire-Géo 6ème — Belin", Subject.HISTOIRE_GEO, SchoolLevel.SIXIEME,
-                BookCondition.MOYEN, img(2), seller, est, false);
+                BookCondition.MOYEN, img(2), seller, est, false, OfferType.EXCHANGE, null);
         delivered.setStatus(CopyStatus.DELIVERED);
         if (paul != null) {
             delivered.setReservedBy(paul);
@@ -237,24 +245,24 @@ public class DataLoader implements CommandLineRunner {
         Zone centre = zoneRepository.findByCode("CENTRE").orElseThrow();
 
         BookCopy sofa = saveBook("Canapé 3 places — tissu beige", Subject.MEUBLES, SchoolLevel.CM2,
-                BookCondition.BON, img(12), seller, est, false);
+                BookCondition.BON, img(12), seller, est, false, OfferType.SALE, 45000);
         sofa.setListingCategory(ListingCategory.DECOR);
         bookCopyRepository.save(sofa);
 
         BookCopy lamp = saveBook("Lampe de salon en rotin", Subject.LUMINAIRES, SchoolLevel.CM2,
-                BookCondition.NEUF, img(8), seller, est, false);
+                BookCondition.NEUF, img(8), seller, est, false, OfferType.EXCHANGE, null);
         lamp.setListingCategory(ListingCategory.DECOR);
         bookCopyRepository.save(lamp);
 
         if (sophie != null) {
             BookCopy curtain = saveBook("Rideaux lin 140x260", Subject.TEXTILE, SchoolLevel.CM2,
-                    BookCondition.BON, img(9), sophie, est, false);
+                    BookCondition.BON, img(9), sophie, est, false, OfferType.DONATION, null);
             curtain.setListingCategory(ListingCategory.DECOR);
             bookCopyRepository.save(curtain);
         }
         if (anon != null) {
             BookCopy vase = saveBook("Vase céramique artisanat local", Subject.DECORATION, SchoolLevel.CM2,
-                    BookCondition.BON, img(13), anon, centre, false);
+                    BookCondition.BON, img(13), anon, centre, false, OfferType.DONATION, null);
             vase.setListingCategory(ListingCategory.DECOR);
             vase.setAnonymous(true);
             bookCopyRepository.save(vase);
@@ -277,18 +285,18 @@ public class DataLoader implements CommandLineRunner {
         Zone nord = zoneRepository.findByCode("NORD").orElseThrow();
 
         BookCopy bag = saveBook("Cartable bleu marine", Subject.AUTRE, SchoolLevel.CM2,
-                BookCondition.BON, img(5), seller, est, false);
+                BookCondition.BON, img(5), seller, est, false, OfferType.EXCHANGE, null);
         bag.setListingCategory(ListingCategory.MISC);
         bookCopyRepository.save(bag);
 
         BookCopy bike = saveBook("Vélo enfant 16 pouces", Subject.AUTRE, SchoolLevel.CM2,
-                BookCondition.MOYEN, img(6), seller, est, false);
+                BookCondition.MOYEN, img(6), seller, est, false, OfferType.SALE, 15000);
         bike.setListingCategory(ListingCategory.MISC);
         bookCopyRepository.save(bike);
 
         if (sophie != null) {
             BookCopy lunch = saveBook("Boîte à goûter — inox", Subject.AUTRE, SchoolLevel.CM2,
-                    BookCondition.NEUF, img(11), sophie, nord, false);
+                    BookCondition.NEUF, img(11), sophie, nord, false, OfferType.DONATION, null);
             lunch.setListingCategory(ListingCategory.MISC);
             bookCopyRepository.save(lunch);
         }
@@ -336,9 +344,26 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
+    private void migrateOfferType() {
+        for (BookCopy copy : bookCopyRepository.findByOfferTypeIsNull()) {
+            copy.setOfferType(OfferType.EXCHANGE);
+            bookCopyRepository.save(copy);
+        }
+        for (BookCopy copy : bookCopyRepository.findAll()) {
+            if (copy.getListingCategory() == ListingCategory.BOOKS && copy.getExpectedPrice() != null) {
+                copy.setExpectedPrice(null);
+                bookCopyRepository.save(copy);
+            }
+        }
+    }
+
     private BookCopy saveBook(String title, Subject subject, SchoolLevel level, BookCondition condition,
-                              String photoUrl, User depositor, Zone zone, boolean libraryMode) {
-        return bookCopyRepository.save(new BookCopy(title, subject, level, condition, photoUrl, depositor, zone, libraryMode));
+                              String photoUrl, User depositor, Zone zone, boolean libraryMode,
+                              OfferType offerType, Integer expectedPrice) {
+        BookCopy copy = new BookCopy(title, subject, level, condition, photoUrl, depositor, zone, libraryMode);
+        copy.setOfferType(offerType != null ? offerType : OfferType.EXCHANGE);
+        copy.setExpectedPrice(offerType == OfferType.SALE ? expectedPrice : null);
+        return bookCopyRepository.save(copy);
     }
 
     /** Photos libres Unsplash (manuels / livres scolaires) */

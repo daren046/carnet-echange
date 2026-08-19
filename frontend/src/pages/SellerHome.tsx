@@ -6,11 +6,12 @@ import { AuthenticatedImage } from "../components/AuthenticatedImage";
 import { Layout } from "../components/Layout";
 import { Badge, EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
+import { levelCategoryLabel, listingSubjectLabel } from "../components/BrowseShell";
 import {
   CONDITION_LABELS,
   COPY_STATUS_LABELS,
-  LEVEL_LABELS,
-  SUBJECT_LABELS,
+  formatCfa,
+  OFFER_TYPE_LABELS,
   type BookCopy,
   type CopyStatus,
 } from "../types";
@@ -126,16 +127,36 @@ export function SellerHome() {
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {book.listingCategory === "BOOKS" && book.level && (
-                      <Badge tone="emerald">{LEVEL_LABELS[book.level]}</Badge>
+                    {book.listingCategory === "BOOKS" && levelCategoryLabel(book.level) && (
+                      <Badge tone="emerald">{levelCategoryLabel(book.level)}</Badge>
                     )}
                     <Badge>
                       {book.listingCategory === "DECOR" ? "Déco" : book.listingCategory === "MISC" ? "Divers" : "Livre"}
                     </Badge>
-                    <Badge>{SUBJECT_LABELS[book.subject]}</Badge>
+                    {listingSubjectLabel(book.listingCategory, book.subject) && (
+                      <Badge>{listingSubjectLabel(book.listingCategory, book.subject)}</Badge>
+                    )}
                     <Badge>{CONDITION_LABELS[book.condition]}</Badge>
+                    {!book.libraryMode && (
+                      <Badge
+                        tone={
+                          book.offerType === "DONATION"
+                            ? "violet"
+                            : book.offerType === "SALE"
+                              ? "amber"
+                              : "emerald"
+                        }
+                      >
+                        {OFFER_TYPE_LABELS[book.offerType] ?? "Échange"}
+                      </Badge>
+                    )}
                     {book.anonymous && <Badge>Anonyme</Badge>}
                   </div>
+                  {book.offerType === "SALE" && book.expectedPrice != null && book.listingCategory !== "BOOKS" && (
+                    <p className="mt-2 text-sm font-medium text-amber-800">
+                      Prix indicatif : {formatCfa(book.expectedPrice)}
+                    </p>
+                  )}
                   <div className="mt-3 flex items-center justify-between gap-2">
                     <Badge tone={statusTone(book.status)}>{COPY_STATUS_LABELS[book.status]}</Badge>
                     {book.reservedByName && book.status !== "AVAILABLE" && (

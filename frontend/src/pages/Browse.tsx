@@ -5,6 +5,8 @@ import {
   BrowseShell,
   bookMatchesCategory,
   categoryGalleryTitle,
+  levelCategoryLabel,
+  listingSubjectLabel,
   type CategoryId,
 } from "../components/BrowseShell";
 import { Layout } from "../components/Layout";
@@ -12,8 +14,6 @@ import { BookCard } from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import {
   CONDITION_LABELS,
-  LEVEL_LABELS,
-  SUBJECT_LABELS,
   type BookCopy,
   type ListingCategory,
 } from "../types";
@@ -147,8 +147,8 @@ export function Browse() {
                 size="gallery"
                 book={{
                   ...book,
-                  level: book.listingCategory === "BOOKS" && book.level ? LEVEL_LABELS[book.level] : null,
-                  subject: book.listingCategory === "MISC" ? "Articles divers" : SUBJECT_LABELS[book.subject],
+                  level: book.listingCategory === "BOOKS" ? levelCategoryLabel(book.level) : null,
+                  subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                 }}
                 action={bookAction()}

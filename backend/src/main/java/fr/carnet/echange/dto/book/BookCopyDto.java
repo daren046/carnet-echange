@@ -3,6 +3,7 @@ package fr.carnet.echange.dto.book;
 import fr.carnet.echange.enums.BookCondition;
 import fr.carnet.echange.enums.CopyStatus;
 import fr.carnet.echange.enums.ListingCategory;
+import fr.carnet.echange.enums.OfferType;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
 
@@ -22,5 +23,10 @@ public record BookCopyDto(
         String reservedByName,
         Instant createdAt,
         ListingCategory listingCategory,
-        boolean anonymous
+        boolean anonymous,
+        String contactName,
+        String contactPhone,
+        String contactEmail,
+        OfferType offerType,
+        Integer expectedPrice
 ) {}

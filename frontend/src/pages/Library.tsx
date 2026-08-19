@@ -11,13 +11,8 @@ import { BookCard } from "../components/Navbar";
 import { Layout } from "../components/Layout";
 import { EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
-import {
-  CONDITION_LABELS,
-  LEVEL_LABELS,
-  SUBJECT_LABELS,
-  type BookCopy,
-  type LibraryLoan,
-} from "../types";
+import { CONDITION_LABELS, type BookCopy, type LibraryLoan } from "../types";
+import { levelCategoryLabel, listingSubjectLabel } from "../components/BrowseShell";
 
 export function Library() {
   const { user, refreshUser } = useAuth();
@@ -111,8 +106,8 @@ export function Library() {
                 key={book.id}
                 book={{
                   ...book,
-                  level: book.level ? LEVEL_LABELS[book.level] : null,
-                  subject: SUBJECT_LABELS[book.subject],
+                  level: levelCategoryLabel(book.level),
+                  subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                   libraryMode: true,
                 }}

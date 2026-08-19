@@ -26,6 +26,31 @@ export const LEVEL_CATEGORIES: { id: LevelCategoryId; label: string; desc: strin
   { id: "universite", label: "Université", desc: "Licence et master" },
 ];
 
+export const LEVEL_CATEGORY_TO_LEVEL: Record<LevelCategoryId, SchoolLevel> = {
+  primaire: "CP",
+  secondaire: "SIXIEME",
+  lycee: "SECONDE",
+  universite: "UNIVERSITE",
+};
+
+export function levelCategoryLabel(level: SchoolLevel | null): string | null {
+  if (!level) return null;
+  if (PRIMARY_LEVELS.includes(level)) return "Primaire";
+  if (SECONDARY_LEVELS.includes(level)) return "Secondaire";
+  if (LYCEE_LEVELS.includes(level)) return "Lycée";
+  if (UNIVERSITY_LEVELS.includes(level)) return "Université";
+  return null;
+}
+
+export function listingSubjectLabel(
+  listingCategory: ListingCategory | undefined,
+  subject: Subject
+): string | null {
+  if (listingCategory === "MISC") return "Articles divers";
+  if (listingCategory === "BOOKS" && subject === "AUTRE") return null;
+  return SUBJECT_LABELS[subject];
+}
+
 export function browseCategoriesFor(rayon: BrowseRayon): { id: CategoryId; label: string }[] {
   if (rayon === "ALL") {
     return [

@@ -1,25 +1,31 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
-import { depositBook, getZones } from "../api/client";
+import { depositBook } from "../api/client";
 import { Layout } from "../components/Layout";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
-  BOOK_SUBJECTS,
+  LEVEL_CATEGORIES,
+  LEVEL_CATEGORY_TO_LEVEL,
+  type LevelCategoryId,
+} from "../components/BrowseShell";
+import {
   CONDITION_LABELS,
   DECOR_SUBJECTS,
-  LEVEL_LABELS,
-  LEVEL_OPTGROUPS,
   SUBJECT_LABELS,
   type BookCondition,
   type ListingCategory,
-  type SchoolLevel,
-  type Subject,
-  type Zone,
+  type OfferType,
 } from "../types";
 import { isSellerOnly } from "../utils/roles";
+
+function defaultCategory(listingCategory: ListingCategory): string {
+  if (listingCategory === "DECOR") return "MEUBLES";
+  if (listingCategory === "MISC") return "AUTRE";
+  return "primaire";
+}
 
 export function Deposit() {
   const { user, refreshUser } = useAuth();
@@ -29,37 +35,30 @@ export function Deposit() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [zones, setZones] = useState<Zone[]>([]);
   const initialRayon: ListingCategory =
     searchParams.get("rayon") === "deco" ? "DECOR" : searchParams.get("rayon") === "divers" ? "MISC" : "BOOKS";
 
-  const defaultSubject = (listingCategory: ListingCategory): Subject =>
-    listingCategory === "DECOR" ? "MEUBLES" : listingCategory === "MISC" ? "AUTRE" : "MATHEMATIQUES";
   const [form, setForm] = useState({
     title: "",
     listingCategory: initialRayon,
-    subject: defaultSubject(initialRayon),
-    level: "SIXIEME" as SchoolLevel,
+    category: defaultCategory(initialRayon),
     condition: "BON" as BookCondition,
+    offerType: "EXCHANGE" as OfferType,
+    expectedPrice: "",
     libraryMode: false,
     anonymous: !user,
-    zoneCode: "",
+    quartier: user?.zoneName ?? "",
+    contactName: "",
+    contactPhone: "",
+    contactEmail: "",
   });
-
-  useEffect(() => {
-    getZones().then((res) => {
-      setZones(res.data);
-      if (res.data[0]) {
-        setForm((f) => ({ ...f, zoneCode: f.zoneCode || res.data[0].code }));
-      }
-    });
-  }, []);
 
   const setRayon = (listingCategory: ListingCategory) => {
     setForm((f) => ({
       ...f,
       listingCategory,
-      subject: defaultSubject(listingCategory),
+      category: defaultCategory(listingCategory),
+      expectedPrice: listingCategory === "BOOKS" ? "" : f.expectedPrice,
     }));
   };
 
@@ -75,20 +74,58 @@ export function Deposit() {
       toast.error("La photo est obligatoire");
       return;
     }
+    if (!form.quartier.trim()) {
+      toast.error("Indiquez votre quartier");
+      return;
+    }
+    if (!user) {
+      if (form.contactName.trim().length < 2) {
+        toast.error("Indiquez votre nom pour que l’on puisse vous contacter");
+        return;
+      }
+      if (!form.contactPhone.replace(/[^0-9+]/g, "").match(/^\+?[0-9]{8,15}$/)) {
+        toast.error("Indiquez un numéro de téléphone valide");
+        return;
+      }
+    }
+    const library = form.libraryMode && form.listingCategory === "BOOKS";
+    const pricedSale = !library && form.listingCategory !== "BOOKS" && form.offerType === "SALE";
+    const price = Number(form.expectedPrice.replace(/[^0-9]/g, ""));
+    if (pricedSale && (!Number.isInteger(price) || price < 1)) {
+      toast.error("Indiquez le prix attendu pour une vente");
+      return;
+    }
 
     const data = new FormData();
     data.append("title", form.title);
-    data.append("subject", form.subject);
-    if (form.listingCategory === "BOOKS") {
-      data.append("level", form.level);
-    }
-    data.append("condition", form.condition);
-    data.append("libraryMode", String(form.libraryMode && form.listingCategory === "BOOKS"));
     data.append("listingCategory", form.listingCategory);
+    data.append("condition", form.condition);
+    data.append("libraryMode", String(library));
     data.append("anonymous", String(form.anonymous || !user));
+    data.append("quartier", form.quartier.trim());
     data.append("photo", file);
+    if (!library) {
+      data.append("offerType", form.offerType);
+      if (pricedSale) {
+        data.append("expectedPrice", String(price));
+      }
+    }
+
+    if (form.listingCategory === "BOOKS") {
+      data.append("subject", "AUTRE");
+      data.append("level", LEVEL_CATEGORY_TO_LEVEL[form.category as LevelCategoryId]);
+    } else if (form.listingCategory === "DECOR") {
+      data.append("subject", form.category);
+    } else {
+      data.append("subject", "AUTRE");
+    }
+
     if (!user) {
-      data.append("zoneCode", form.zoneCode);
+      data.append("contactName", form.contactName.trim());
+      data.append("contactPhone", form.contactPhone.trim());
+      if (form.contactEmail.trim()) {
+        data.append("contactEmail", form.contactEmail.trim());
+      }
     }
 
     setLoading(true);
@@ -98,8 +135,13 @@ export function Deposit() {
       setForm((f) => ({
         ...f,
         title: "",
+        offerType: "EXCHANGE",
+        expectedPrice: "",
         libraryMode: false,
         anonymous: !user,
+        contactName: "",
+        contactPhone: "",
+        contactEmail: "",
       }));
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
@@ -117,8 +159,6 @@ export function Deposit() {
     }
   };
 
-  const subjects = form.listingCategory === "DECOR" ? DECOR_SUBJECTS : BOOK_SUBJECTS;
-
   return (
     <Layout>
       <PageHeader
@@ -126,7 +166,7 @@ export function Deposit() {
         subtitle={
           user
             ? "Livres, intérieur déco ou articles divers. Vous pouvez masquer votre nom."
-            : "Publiez sans créer de compte : l’annonce apparaît comme anonyme."
+            : "Publiez sans créer de compte : laissez un numéro pour être contacté directement."
         }
         accent={seller ? "teal" : "emerald"}
       />
@@ -204,40 +244,22 @@ export function Deposit() {
             />
           </div>
           {form.listingCategory !== "MISC" && (
-          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                {form.listingCategory === "DECOR" ? "Type" : "Matière"}
-              </label>
+              <label className="block text-sm font-medium text-slate-700">Catégorie</label>
               <select
-                value={form.subject}
-                onChange={(e) => setForm({ ...form, subject: e.target.value as Subject })}
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
                 className={inputClass}
               >
-                {subjects.map((k) => (
-                  <option key={k} value={k}>{SUBJECT_LABELS[k]}</option>
-                ))}
+                {form.listingCategory === "BOOKS"
+                  ? LEVEL_CATEGORIES.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    ))
+                  : DECOR_SUBJECTS.map((k) => (
+                      <option key={k} value={k}>{SUBJECT_LABELS[k]}</option>
+                    ))}
               </select>
             </div>
-            {form.listingCategory === "BOOKS" && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Niveau</label>
-                <select
-                  value={form.level}
-                  onChange={(e) => setForm({ ...form, level: e.target.value as SchoolLevel })}
-                  className={inputClass}
-                >
-                  {LEVEL_OPTGROUPS.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.levels.map((k) => (
-                        <option key={k} value={k}>{LEVEL_LABELS[k]}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700">État</label>
@@ -251,19 +273,100 @@ export function Deposit() {
               ))}
             </select>
           </div>
-          {!user && (
+          {!(form.libraryMode && form.listingCategory === "BOOKS") && (
             <div>
-              <label className="block text-sm font-medium text-slate-700">Quartier</label>
-              <select
-                required
-                value={form.zoneCode}
-                onChange={(e) => setForm({ ...form, zoneCode: e.target.value })}
-                className={inputClass}
-              >
-                {zones.map((z) => (
-                  <option key={z.code} value={z.code}>{z.name}</option>
+              <p className="text-sm font-medium text-slate-700">Vous proposez *</p>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["EXCHANGE", "Échange"],
+                    ["DONATION", "Don"],
+                    ["SALE", "Vente"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm({ ...form, offerType: value, expectedPrice: value === "SALE" ? form.expectedPrice : "" })}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                      form.offerType === value
+                        ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                        : "border-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
                 ))}
-              </select>
+              </div>
+              {form.offerType === "SALE" && form.listingCategory !== "BOOKS" && (
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-slate-700">Prix attendu (indicatif)</label>
+                  <input
+                    required
+                    inputMode="numeric"
+                    value={form.expectedPrice}
+                    onChange={(e) => setForm({ ...form, expectedPrice: e.target.value })}
+                    className={inputClass}
+                    placeholder="Ex. 5000"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Ce montant n’apparaît pas sur l’annonce. Seule l’équipe le voit, pour vous aider à conclure.
+                  </p>
+                </div>
+              )}
+              {form.offerType === "SALE" && form.listingCategory === "BOOKS" && (
+                <p className="mt-2 text-xs text-slate-400">
+                  Les manuels n’ont pas de prix : l’échange se fait par tampons ou directement entre vous.
+                </p>
+              )}
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Quartier</label>
+            <input
+              required
+              value={form.quartier}
+              onChange={(e) => setForm({ ...form, quartier: e.target.value })}
+              className={inputClass}
+              placeholder="Ex. Cissin, Ouaga 2000, Tampouy…"
+            />
+          </div>
+          {!user && (
+            <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+              <p className="text-sm font-medium text-emerald-900">
+                Pour vous contacter directement (sans passer par l’équipe)
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Votre nom *</label>
+                <input
+                  required
+                  value={form.contactName}
+                  onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+                  className={inputClass}
+                  placeholder="Prénom ou nom"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Téléphone *</label>
+                <input
+                  required
+                  type="tel"
+                  value={form.contactPhone}
+                  onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+                  className={inputClass}
+                  placeholder="Ex. 70 00 00 00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Email (optionnel)</label>
+                <input
+                  type="email"
+                  value={form.contactEmail}
+                  onChange={(e) => setForm({ ...form, contactEmail: e.target.value })}
+                  className={inputClass}
+                  placeholder="pour recevoir un message"
+                />
+              </div>
             </div>
           )}
           {user && form.listingCategory === "BOOKS" && !seller && (
@@ -277,19 +380,21 @@ export function Deposit() {
               Déposer en mode bibliothèque (emprunt avec caution, pas de tampon)
             </label>
           )}
-          <label className="flex items-start gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              checked={form.anonymous || !user}
-              onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
-              disabled={!user}
-              className="mt-0.5 rounded border-slate-300 text-emerald-600"
-            />
-            Publier en utilisateur anonyme (votre nom n’apparaît pas)
-          </label>
+          {user && (
+            <label className="flex items-start gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={form.anonymous}
+                onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
+                className="mt-0.5 rounded border-slate-300 text-emerald-600"
+              />
+              Publier en utilisateur anonyme (votre nom n’apparaît pas)
+            </label>
+          )}
           {!user && (
             <p className="text-xs text-slate-400">
-              Sans compte, l’annonce est forcément anonyme.{" "}
+              Sans compte, votre nom d’utilisateur n’apparaît pas, mais votre téléphone reste visible pour les
+              échanges.{" "}
               <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
               {" "}si vous voulez suivre vos ventes.
             </p>

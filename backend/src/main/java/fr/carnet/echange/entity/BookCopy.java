@@ -3,6 +3,7 @@ package fr.carnet.echange.entity;
 import fr.carnet.echange.enums.BookCondition;
 import fr.carnet.echange.enums.CopyStatus;
 import fr.carnet.echange.enums.ListingCategory;
+import fr.carnet.echange.enums.OfferType;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
 import jakarta.persistence.*;
@@ -57,6 +58,18 @@ public class BookCopy {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean anonymous = false;
 
+    /** Contact du déposant sans compte — pour le joindre directement, sans passer par l’équipe. */
+    private String contactName;
+    private String contactPhone;
+    private String contactEmail;
+
+    /** Échange, don ou vente. Null = anciens enregistrements, traités comme EXCHANGE. */
+    @Enumerated(EnumType.STRING)
+    private OfferType offerType = OfferType.EXCHANGE;
+
+    /** Prix attendu (FCFA) pour une vente — interne, non affiché au public. */
+    private Integer expectedPrice;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private User reservedBy;
 
@@ -77,6 +90,7 @@ public class BookCopy {
         this.libraryMode = libraryMode;
         this.listingCategory = ListingCategory.BOOKS;
         this.anonymous = false;
+        this.offerType = OfferType.EXCHANGE;
     }
 
     public Long getId() { return id; }
@@ -93,6 +107,13 @@ public class BookCopy {
         return listingCategory != null ? listingCategory : ListingCategory.BOOKS;
     }
     public boolean isAnonymous() { return anonymous; }
+    public String getContactName() { return contactName; }
+    public String getContactPhone() { return contactPhone; }
+    public String getContactEmail() { return contactEmail; }
+    public OfferType getOfferType() {
+        return offerType != null ? offerType : OfferType.EXCHANGE;
+    }
+    public Integer getExpectedPrice() { return expectedPrice; }
     public User getReservedBy() { return reservedBy; }
     public Instant getCreatedAt() { return createdAt; }
 
@@ -101,4 +122,9 @@ public class BookCopy {
     public void setListingCategory(ListingCategory listingCategory) { this.listingCategory = listingCategory; }
     public void setAnonymous(boolean anonymous) { this.anonymous = anonymous; }
     public void setZone(Zone zone) { this.zone = zone; }
+    public void setContactName(String contactName) { this.contactName = contactName; }
+    public void setContactPhone(String contactPhone) { this.contactPhone = contactPhone; }
+    public void setContactEmail(String contactEmail) { this.contactEmail = contactEmail; }
+    public void setOfferType(OfferType offerType) { this.offerType = offerType; }
+    public void setExpectedPrice(Integer expectedPrice) { this.expectedPrice = expectedPrice; }
 }

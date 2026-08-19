@@ -13,6 +13,7 @@ export type Subject =
   | "MEUBLES" | "LUMINAIRES" | "TEXTILE" | "VAISSELLE" | "DECORATION";
 
 export type ListingCategory = "BOOKS" | "DECOR" | "MISC";
+export type OfferType = "EXCHANGE" | "DONATION" | "SALE";
 
 export type BookCondition = "NEUF" | "BON" | "MOYEN" | "ABIME";
 export type CopyStatus = "AVAILABLE" | "RESERVED" | "IN_DELIVERY" | "DELIVERED" | "LIBRARY_BORROWED";
@@ -96,6 +97,11 @@ export interface BookCopy {
   createdAt: string;
   listingCategory: ListingCategory;
   anonymous: boolean;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  offerType: OfferType;
+  expectedPrice: number | null;
 }
 
 export interface Transaction {
@@ -195,6 +201,16 @@ export const CONDITION_LABELS: Record<BookCondition, string> = {
   MOYEN: "État moyen",
   ABIME: "Abîmé",
 };
+
+export const OFFER_TYPE_LABELS: Record<OfferType, string> = {
+  EXCHANGE: "Échange",
+  DONATION: "Don",
+  SALE: "Vente",
+};
+
+export function formatCfa(amount: number) {
+  return `${amount.toLocaleString("fr-FR")} F`;
+}
 
 export const PROVIDER_LABELS: Record<MobileMoneyProvider, string> = {
   ORANGE_MONEY: "Orange Money",

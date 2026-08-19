@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ZoneRepository extends JpaRepository<Zone, Long> {
     Optional<Zone> findByCode(String code);
+    Optional<Zone> findByNameIgnoreCase(String name);
 }
