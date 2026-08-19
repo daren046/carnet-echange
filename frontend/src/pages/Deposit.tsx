@@ -78,7 +78,7 @@ export function Deposit() {
       toast.error("Indiquez votre quartier");
       return;
     }
-    if (!user) {
+    if (!user && !form.anonymous) {
       if (form.contactName.trim().length < 2) {
         toast.error("Indiquez votre nom pour que l’on puisse vous contacter");
         return;
@@ -101,7 +101,7 @@ export function Deposit() {
     data.append("listingCategory", form.listingCategory);
     data.append("condition", form.condition);
     data.append("libraryMode", String(library));
-    data.append("anonymous", String(form.anonymous || !user));
+    data.append("anonymous", String(form.anonymous));
     data.append("quartier", form.quartier.trim());
     data.append("photo", file);
     if (!library) {
@@ -121,8 +121,12 @@ export function Deposit() {
     }
 
     if (!user) {
-      data.append("contactName", form.contactName.trim());
-      data.append("contactPhone", form.contactPhone.trim());
+      if (form.contactName.trim()) {
+        data.append("contactName", form.contactName.trim());
+      }
+      if (form.contactPhone.trim()) {
+        data.append("contactPhone", form.contactPhone.trim());
+      }
       if (form.contactEmail.trim()) {
         data.append("contactEmail", form.contactEmail.trim());
       }
@@ -331,7 +335,7 @@ export function Deposit() {
               placeholder="Ex. Cissin, Ouaga 2000, Tampouy…"
             />
           </div>
-          {!user && (
+          {!user && !form.anonymous && (
             <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
               <p className="text-sm font-medium text-emerald-900">
                 Pour vous contacter directement (sans passer par l’équipe)
@@ -369,6 +373,23 @@ export function Deposit() {
               </div>
             </div>
           )}
+          {!user && form.anonymous && (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">
+                L’annonce s’affiche comme « Anonyme ». Vous pouvez laisser un numéro pour l’équipe seulement.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Téléphone (optionnel, non affiché)</label>
+                <input
+                  type="tel"
+                  value={form.contactPhone}
+                  onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+                  className={inputClass}
+                  placeholder="Ex. 70 00 00 00"
+                />
+              </div>
+            </div>
+          )}
           {user && form.listingCategory === "BOOKS" && !seller && (
             <label className="flex items-start gap-2 text-sm text-slate-600">
               <input
@@ -380,21 +401,20 @@ export function Deposit() {
               Déposer en mode bibliothèque (emprunt avec caution, pas de tampon)
             </label>
           )}
-          {user && (
-            <label className="flex items-start gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={form.anonymous}
-                onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
-                className="mt-0.5 rounded border-slate-300 text-emerald-600"
-              />
-              Publier en utilisateur anonyme (votre nom n’apparaît pas)
-            </label>
-          )}
+          <label className="flex items-start gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={form.anonymous}
+              onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
+              className="mt-0.5 rounded border-slate-300 text-emerald-600"
+            />
+            Publier en anonyme (votre nom n’apparaît pas)
+          </label>
           {!user && (
             <p className="text-xs text-slate-400">
-              Sans compte, votre nom d’utilisateur n’apparaît pas, mais votre téléphone reste visible pour les
-              échanges.{" "}
+              {form.anonymous
+                ? "Sans compte, l’annonce reste anonyme. "
+                : "Votre nom et votre téléphone seront visibles sur l’annonce. "}
               <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
               {" "}si vous voulez suivre vos ventes.
             </p>

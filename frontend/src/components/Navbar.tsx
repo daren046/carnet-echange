@@ -435,7 +435,7 @@ export function BookCard({
               {OFFER_TYPE_LABELS[book.offerType as OfferType] ?? book.offerType}
             </span>
           )}
-          {book.anonymous && !book.contactPhone && (
+          {book.anonymous && (
             <span className="rounded-full bg-slate-800 px-2 py-0.5 text-white">Anonyme</span>
           )}
         </div>

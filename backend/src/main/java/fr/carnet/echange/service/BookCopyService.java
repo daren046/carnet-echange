@@ -48,7 +48,7 @@ public class BookCopyService {
                                OfferType offerType, Integer expectedPrice)
             throws IOException {
         ListingCategory category = listingCategory != null ? listingCategory : ListingCategory.BOOKS;
-        boolean hideIdentity = anonymous || user == null;
+        boolean hideIdentity = anonymous;
         User depositor = user != null ? user : anonymousUser();
 
         String quartierValue = quartier != null ? quartier.trim() : "";
@@ -66,7 +66,7 @@ public class BookCopyService {
             resolvedSubject = Subject.AUTRE;
         }
 
-        if (user == null) {
+        if (user == null && !hideIdentity) {
             applyGuestContact(contactName, contactPhone, contactEmail);
         }
 
@@ -111,14 +111,16 @@ public class BookCopyService {
 
     public BookCopyDto toDto(BookCopy copy, User viewer) {
         boolean hidden = copy.isAnonymous();
+        boolean teamViewer = canSeePrivateFields(copy, viewer);
         String publicName;
-        if (copy.getContactName() != null && !copy.getContactName().isBlank()) {
-            publicName = copy.getContactName().trim();
-        } else if (hidden) {
+        if (hidden) {
             publicName = "Anonyme";
+        } else if (copy.getContactName() != null && !copy.getContactName().isBlank()) {
+            publicName = copy.getContactName().trim();
         } else {
             publicName = copy.getDepositor().getFirstName() + " " + copy.getDepositor().getLastName();
         }
+        boolean showContact = !hidden || teamViewer;
         return new BookCopyDto(
                 copy.getId(),
                 copy.getTitle(),
@@ -135,13 +137,25 @@ public class BookCopyService {
                         : null,
                 copy.getCreatedAt(),
                 copy.getListingCategory(),
-                hidden && (copy.getContactName() == null || copy.getContactName().isBlank()),
-                blankToNull(copy.getContactName()),
-                blankToNull(copy.getContactPhone()),
-                blankToNull(copy.getContactEmail()),
+                hidden,
+                showContact ? blankToNull(copy.getContactName()) : null,
+                showContact ? blankToNull(copy.getContactPhone()) : null,
+                showContact ? blankToNull(copy.getContactEmail()) : null,
                 copy.getOfferType(),
                 visibleExpectedPrice(copy, viewer)
         );
+    }
+
+    private static boolean canSeePrivateFields(BookCopy copy, User viewer) {
+        if (viewer == null) {
+            return false;
+        }
+        if (viewer.getRole() == UserRole.ADMIN) {
+            return true;
+        }
+        return copy.getDepositor() != null
+                && copy.getDepositor().getId().equals(viewer.getId())
+                && !ANONYMOUS_EMAIL.equalsIgnoreCase(viewer.getEmail());
     }
 
     private static Integer visibleExpectedPrice(BookCopy copy, User viewer) {
