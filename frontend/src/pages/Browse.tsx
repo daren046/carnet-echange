@@ -21,6 +21,7 @@ import { isSellerOnly } from "../utils/roles";
 
 function rayonFromPath(pathname: string): ListingCategory | "ALL" {
   if (pathname === "/deco") return "DECOR";
+  if (pathname === "/divers") return "MISC";
   if (pathname === "/annonces") return "ALL";
   return "BOOKS";
 }
@@ -109,8 +110,10 @@ export function Browse() {
               <p className="text-sm text-slate-600">
                 {rayon === "DECOR"
                   ? "Meubles, luminaires, textile et objets déco."
+                  : rayon === "MISC"
+                    ? "Objets du quotidien et tout ce qui n’est ni un livre ni de la déco."
                   : rayon === "ALL"
-                    ? "Livres et intérieur déco, au même endroit."
+                    ? "Livres, intérieur déco et articles divers."
                     : "Manuels scolaires, du primaire à l’université."}
               </p>
               <Link
@@ -144,8 +147,8 @@ export function Browse() {
                 size="gallery"
                 book={{
                   ...book,
-                  level: book.listingCategory === "DECOR" ? null : (book.level ? LEVEL_LABELS[book.level] : null),
-                  subject: SUBJECT_LABELS[book.subject],
+                  level: book.listingCategory === "BOOKS" && book.level ? LEVEL_LABELS[book.level] : null,
+                  subject: book.listingCategory === "MISC" ? "Articles divers" : SUBJECT_LABELS[book.subject],
                   condition: CONDITION_LABELS[book.condition],
                 }}
                 action={bookAction()}

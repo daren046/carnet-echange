@@ -30,11 +30,15 @@ export function Deposit() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [zones, setZones] = useState<Zone[]>([]);
-  const initialRayon: ListingCategory = searchParams.get("rayon") === "deco" ? "DECOR" : "BOOKS";
+  const initialRayon: ListingCategory =
+    searchParams.get("rayon") === "deco" ? "DECOR" : searchParams.get("rayon") === "divers" ? "MISC" : "BOOKS";
+
+  const defaultSubject = (listingCategory: ListingCategory): Subject =>
+    listingCategory === "DECOR" ? "MEUBLES" : listingCategory === "MISC" ? "AUTRE" : "MATHEMATIQUES";
   const [form, setForm] = useState({
     title: "",
     listingCategory: initialRayon,
-    subject: (initialRayon === "DECOR" ? "MEUBLES" : "MATHEMATIQUES") as Subject,
+    subject: defaultSubject(initialRayon),
     level: "SIXIEME" as SchoolLevel,
     condition: "BON" as BookCondition,
     libraryMode: false,
@@ -55,7 +59,7 @@ export function Deposit() {
     setForm((f) => ({
       ...f,
       listingCategory,
-      subject: listingCategory === "DECOR" ? "MEUBLES" : "MATHEMATIQUES",
+      subject: defaultSubject(listingCategory),
     }));
   };
 
@@ -103,7 +107,7 @@ export function Deposit() {
       if (seller || user) {
         navigate("/seller");
       } else {
-        navigate(form.listingCategory === "DECOR" ? "/deco" : "/livres");
+        navigate(form.listingCategory === "DECOR" ? "/deco" : form.listingCategory === "MISC" ? "/divers" : "/livres");
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -121,7 +125,7 @@ export function Deposit() {
         title="Déposer une annonce"
         subtitle={
           user
-            ? "Livres ou intérieur déco. Vous pouvez masquer votre nom."
+            ? "Livres, intérieur déco ou articles divers. Vous pouvez masquer votre nom."
             : "Publiez sans créer de compte : l’annonce apparaît comme anonyme."
         }
         accent={seller ? "teal" : "emerald"}
@@ -130,7 +134,7 @@ export function Deposit() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <p className="text-sm font-medium text-slate-700">Rayon</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setRayon("BOOKS")}
@@ -152,6 +156,17 @@ export function Deposit() {
                 }`}
               >
                 Intérieur Déco
+              </button>
+              <button
+                type="button"
+                onClick={() => setRayon("MISC")}
+                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                  form.listingCategory === "MISC"
+                    ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 text-slate-600"
+                }`}
+              >
+                Articles divers
               </button>
             </div>
           </div>
@@ -179,9 +194,16 @@ export function Deposit() {
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               className={inputClass}
-              placeholder={form.listingCategory === "DECOR" ? "Ex. Canapé 3 places" : "Ex. Transmath 6ème"}
+              placeholder={
+                form.listingCategory === "DECOR"
+                  ? "Ex. Canapé 3 places"
+                  : form.listingCategory === "MISC"
+                    ? "Ex. Cartable, vélo enfant"
+                    : "Ex. Transmath 6ème"
+              }
             />
           </div>
+          {form.listingCategory !== "MISC" && (
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-slate-700">
@@ -216,6 +238,7 @@ export function Deposit() {
               </div>
             )}
           </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-700">État</label>
             <select

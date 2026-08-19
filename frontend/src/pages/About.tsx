@@ -8,7 +8,7 @@ import type { ImpactStats } from "../types";
 const FAQ = [
   {
     q: "Je dois m’inscrire pour regarder ?",
-    a: "Non. Sur Perso, vous parcourez Livres et Intérieur Déco sans compte. À Ouaga, beaucoup préfèrent d’abord voir ce qui existe.",
+    a: "Non. Sur Perso, vous parcourez Livres, Intérieur Déco et Articles divers sans compte. À Ouaga, beaucoup préfèrent d’abord voir ce qui existe.",
   },
   {
     q: "Puis-je publier sans donner mon nom ?",
@@ -60,7 +60,7 @@ export function About() {
     <Layout>
       <PageHeader
         title="Impact & FAQ"
-        subtitle="Livres et intérieur déco, sans obligation de créer un compte. Voici l’effet du réseau et les réponses utiles."
+        subtitle="Livres, intérieur déco et articles divers, sans obligation de créer un compte. Voici l’effet du réseau et les réponses utiles."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -46,6 +46,7 @@ public class DataLoader implements CommandLineRunner {
         seedBooks();
         seedSellerBooks();
         seedDecorItems();
+        seedMiscItems();
         seedDemoNotifications();
         migrateListingCategory();
     }
@@ -260,8 +261,44 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
+    private void seedMiscItems() {
+        User seller = userRepository.findByEmail("vendeur@carnet.fr").orElse(null);
+        User sophie = userRepository.findByEmail("sophie@carnet.fr").orElse(null);
+        if (seller == null) {
+            return;
+        }
+        boolean already = bookCopyRepository.findByDepositorIdOrderByCreatedAtDesc(seller.getId()).stream()
+                .anyMatch(b -> b.getListingCategory() == ListingCategory.MISC);
+        if (already) {
+            return;
+        }
+
+        Zone est = zoneRepository.findByCode("EST").orElseThrow();
+        Zone nord = zoneRepository.findByCode("NORD").orElseThrow();
+
+        BookCopy bag = saveBook("Cartable bleu marine", Subject.AUTRE, SchoolLevel.CM2,
+                BookCondition.BON, img(5), seller, est, false);
+        bag.setListingCategory(ListingCategory.MISC);
+        bookCopyRepository.save(bag);
+
+        BookCopy bike = saveBook("Vélo enfant 16 pouces", Subject.AUTRE, SchoolLevel.CM2,
+                BookCondition.MOYEN, img(6), seller, est, false);
+        bike.setListingCategory(ListingCategory.MISC);
+        bookCopyRepository.save(bike);
+
+        if (sophie != null) {
+            BookCopy lunch = saveBook("Boîte à goûter — inox", Subject.AUTRE, SchoolLevel.CM2,
+                    BookCondition.NEUF, img(11), sophie, nord, false);
+            lunch.setListingCategory(ListingCategory.MISC);
+            bookCopyRepository.save(lunch);
+        }
+    }
+
     private void migrateListingCategory() {
         for (BookCopy copy : bookCopyRepository.findAll()) {
+            if (copy.getListingCategory() == ListingCategory.MISC) {
+                continue;
+            }
             boolean decorSubject = copy.getSubject() == Subject.MEUBLES
                     || copy.getSubject() == Subject.LUMINAIRES
                     || copy.getSubject() == Subject.TEXTILE

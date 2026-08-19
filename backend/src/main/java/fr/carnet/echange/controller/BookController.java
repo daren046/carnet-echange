@@ -62,9 +62,9 @@ public class BookController {
                 user, title, subject, level, condition, photo, libraryMode, listingCategory, anonymous, zoneCode);
         String message = guest || anonymous
                 ? "Annonce publiée — votre identité reste cachée"
-                : listingCategory == ListingCategory.DECOR
-                    ? "Article déposé"
-                    : "Livre déposé — +1 tampon !";
+                : listingCategory == ListingCategory.BOOKS
+                    ? "Livre déposé — +1 tampon !"
+                    : "Article déposé";
         return ApiResponse.ok(message, created);
     }
 }

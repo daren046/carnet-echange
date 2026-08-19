@@ -93,7 +93,7 @@ export function Home() {
                 {user
                   ? seller
                     ? "Le catalogue public est ici. Vos annonces se gèrent dans l’espace vendeur."
-                    : "Les dernières annonces, livres et déco confondus."
+                    : "Les dernières annonces, tous produits confondus."
                   : "Regardez les annonces sans créer de compte — à Ouaga, on commence par regarder."}
               </p>
               <Link
@@ -123,8 +123,8 @@ export function Home() {
                 size="gallery"
                 book={{
                   ...book,
-                  level: book.listingCategory === "DECOR" ? null : (book.level ? LEVEL_LABELS[book.level] : null),
-                  subject: SUBJECT_LABELS[book.subject],
+                  level: book.listingCategory === "BOOKS" && book.level ? LEVEL_LABELS[book.level] : null,
+                  subject: book.listingCategory === "MISC" ? "Articles divers" : SUBJECT_LABELS[book.subject],
                   condition: CONDITION_LABELS[book.condition],
                 }}
                 action={bookAction()}

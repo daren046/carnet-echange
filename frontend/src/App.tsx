@@ -77,6 +77,7 @@ function AppRoutes() {
       <Route path="/" element={<HomeRouter />} />
       <Route path="/livres" element={<Browse />} />
       <Route path="/deco" element={<Browse />} />
+      <Route path="/divers" element={<Browse />} />
       <Route path="/annonces" element={<Browse />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

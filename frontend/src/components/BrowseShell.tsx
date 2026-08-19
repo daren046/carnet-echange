@@ -15,7 +15,7 @@ export const LYCEE_LEVELS: SchoolLevel[] = ["SECONDE", "PREMIERE", "TERMINALE"];
 export const UNIVERSITY_LEVELS: SchoolLevel[] = ["UNIVERSITE"];
 
 export type LevelCategoryId = "primaire" | "secondaire" | "lycee" | "universite";
-export type RayonFilterId = "rayon-livres" | "rayon-deco";
+export type RayonFilterId = "rayon-livres" | "rayon-deco" | "rayon-misc";
 export type CategoryId = "all" | LevelCategoryId | RayonFilterId | Subject;
 export type BrowseRayon = ListingCategory | "ALL" | "HOME";
 
@@ -32,7 +32,19 @@ export function browseCategoriesFor(rayon: BrowseRayon): { id: CategoryId; label
       { id: "all", label: "Tout voir" },
       { id: "rayon-livres", label: "Livres" },
       { id: "rayon-deco", label: "Intérieur Déco" },
+      { id: "rayon-misc", label: "Articles divers" },
     ];
+  }
+  if (rayon === "HOME") {
+    return [
+      { id: "all", label: "Tout voir" },
+      { id: "rayon-livres", label: "Livres" },
+      { id: "rayon-deco", label: "Intérieur Déco" },
+      { id: "rayon-misc", label: "Articles divers" },
+    ];
+  }
+  if (rayon === "MISC") {
+    return [{ id: "all", label: "Tout voir" }];
   }
   if (rayon === "DECOR") {
     return [
@@ -50,6 +62,7 @@ export function browseCategoriesFor(rayon: BrowseRayon): { id: CategoryId; label
 export function categoryGalleryTitle(id: CategoryId, rayon: BrowseRayon = "BOOKS"): string {
   if (id === "all") {
     if (rayon === "DECOR") return "Intérieur Déco";
+    if (rayon === "MISC") return "Articles divers";
     if (rayon === "ALL") return "Toutes les annonces";
     if (rayon === "HOME") return "Dernières annonces";
     return "Livres";
@@ -66,8 +79,9 @@ export function bookMatchesCategory(
   category: CategoryId
 ): boolean {
   if (category === "all") return true;
-  if (category === "rayon-livres") return listingCategory !== "DECOR";
+  if (category === "rayon-livres") return listingCategory === "BOOKS";
   if (category === "rayon-deco") return listingCategory === "DECOR";
+  if (category === "rayon-misc") return listingCategory === "MISC";
   if (category === "primaire") return level != null && PRIMARY_LEVELS.includes(level);
   if (category === "secondaire") return level != null && SECONDARY_LEVELS.includes(level);
   if (category === "lycee") return level != null && LYCEE_LEVELS.includes(level);
@@ -78,7 +92,7 @@ export function bookMatchesCategory(
 const LEVEL_IDS: CategoryId[] = ["primaire", "secondaire", "lycee", "universite"];
 
 export function isSubjectCategory(id: CategoryId): id is Subject {
-  return id !== "all" && id !== "rayon-livres" && id !== "rayon-deco" && !LEVEL_IDS.includes(id);
+  return id !== "all" && id !== "rayon-livres" && id !== "rayon-deco" && id !== "rayon-misc" && !LEVEL_IDS.includes(id);
 }
 
 function navButtonClass(active: boolean) {
@@ -131,7 +145,7 @@ export function BrowseShell({
   rayon?: BrowseRayon;
   children: ReactNode;
 }) {
-  const showBookGroups = rayon === "BOOKS" || rayon === "HOME";
+  const showBookGroups = rayon === "BOOKS";
 
   return (
     <>
@@ -149,13 +163,16 @@ export function BrowseShell({
               Tout voir
             </button>
 
-            {rayon === "ALL" && (
+            {(rayon === "ALL" || rayon === "HOME") && (
               <>
                 <button type="button" onClick={() => onCategoryChange("rayon-livres")} className={navButtonClass(activeCategory === "rayon-livres")}>
                   Livres
                 </button>
                 <button type="button" onClick={() => onCategoryChange("rayon-deco")} className={navButtonClass(activeCategory === "rayon-deco")}>
                   Intérieur Déco
+                </button>
+                <button type="button" onClick={() => onCategoryChange("rayon-misc")} className={navButtonClass(activeCategory === "rayon-misc")}>
+                  Articles divers
                 </button>
               </>
             )}

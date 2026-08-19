@@ -12,7 +12,7 @@ export type Subject =
   | "TECHNOLOGIE" | "ARTS" | "MUSIQUE" | "EPS" | "AUTRE"
   | "MEUBLES" | "LUMINAIRES" | "TEXTILE" | "VAISSELLE" | "DECORATION";
 
-export type ListingCategory = "BOOKS" | "DECOR";
+export type ListingCategory = "BOOKS" | "DECOR" | "MISC";
 
 export type BookCondition = "NEUF" | "BON" | "MOYEN" | "ABIME";
 export type CopyStatus = "AVAILABLE" | "RESERVED" | "IN_DELIVERY" | "DELIVERED" | "LIBRARY_BORROWED";
@@ -182,7 +182,7 @@ export const SUBJECT_LABELS: Record<Subject, string> = {
 export const BOOK_SUBJECTS: Subject[] = [
   "MATHEMATIQUES", "FRANCAIS", "HISTOIRE_GEO", "ANGLAIS",
   "ESPAGNOL", "ALLEMAND", "SVT", "PHYSIQUE_CHIMIE",
-  "TECHNOLOGIE", "ARTS", "MUSIQUE", "EPS", "AUTRE",
+  "TECHNOLOGIE", "ARTS", "MUSIQUE", "EPS",
 ];
 
 export const DECOR_SUBJECTS: Subject[] = [

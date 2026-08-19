@@ -65,7 +65,7 @@ public class BookCopyService {
         copy.setAnonymous(hideIdentity);
         copy = bookCopyRepository.save(copy);
 
-        if (user != null && !libraryMode && !hideIdentity) {
+        if (user != null && !libraryMode && !hideIdentity && category == ListingCategory.BOOKS) {
             stampService.creditDeposit(user, copy);
         }
         return toDto(copy);

@@ -35,6 +35,7 @@ const publicBarNav = [
   { to: "/", label: "Accueil" },
   { to: "/livres", label: "Livres" },
   { to: "/deco", label: "Intérieur Déco" },
+  { to: "/divers", label: "Articles divers" },
   { to: "/deposit", label: "Déposer une annonce" },
   { to: "/annonces", label: "Voir toutes les annonces" },
 ];
