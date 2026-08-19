@@ -52,7 +52,7 @@ export function Catalog() {
         title: title || undefined,
         listingCategory: "BOOKS",
       });
-      setBooks(res.data.filter((b) => bookMatchesCategory(b.level, b.subject, category)));
+      setBooks(res.data.filter((b) => bookMatchesCategory(b.level, b.subject, b.listingCategory, category)));
     } finally {
       setLoading(false);
     }

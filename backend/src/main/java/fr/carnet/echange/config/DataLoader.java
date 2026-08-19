@@ -161,6 +161,10 @@ public class DataLoader implements CommandLineRunner {
         saveBook("Physique-Chimie Terminale — Bordas", Subject.PHYSIQUE_CHIMIE, SchoolLevel.TERMINALE,
                 BookCondition.BON, img(10), karim, centre, false);
 
+        // ——— Université ———
+        saveBook("Introduction à l'économie — Licence", Subject.AUTRE, SchoolLevel.UNIVERSITE,
+                BookCondition.BON, img(7), karim, centre, false);
+
         // ——— Primaire (déposés par un parent) ———
         saveBook("J'apprends à lire — CP", Subject.FRANCAIS, SchoolLevel.CP,
                 BookCondition.BON, img(11), sophie, est, false);

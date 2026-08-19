@@ -26,9 +26,17 @@ import { homePathFor, isDelivererOnly, isSellerOnly } from "../utils/roles";
 
 const primaryNav = [
   { to: "/", label: "Accueil", icon: Home },
-  { to: "/catalog", label: "Catalogue", icon: BookOpen },
+  { to: "/annonces", label: "Catalogue", icon: BookOpen },
   { to: "/deposit", label: "Déposer", icon: PlusCircle },
   { to: "/library", label: "Bibliothèque", icon: Library },
+];
+
+const publicBarNav = [
+  { to: "/", label: "Accueil" },
+  { to: "/livres", label: "Livres" },
+  { to: "/deco", label: "Intérieur Déco" },
+  { to: "/deposit", label: "Déposer une annonce" },
+  { to: "/annonces", label: "Voir toutes les annonces" },
 ];
 
 const accountNav = [
@@ -80,9 +88,7 @@ export function Navbar() {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const rayon = searchParams.get("rayon") === "deco" ? "deco" : "livres";
   const accountActive = accountNav.some((item) => location.pathname === item.to);
-  const desktopNav = delivererMode ? delivererNavItems : sellerMode ? sellerNavItems : primaryNav;
   const mobileNav = delivererMode
     ? delivererNavItems
     : sellerMode
@@ -113,11 +119,8 @@ export function Navbar() {
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
     const q = query.trim();
-    if (q) params.set("q", q);
-    params.set("rayon", rayon);
-    navigate(`/?${params.toString()}`);
+    navigate(q ? `/annonces?q=${encodeURIComponent(q)}` : "/annonces");
   };
 
   const handleHeaderLogin = async (e: FormEvent) => {
@@ -189,7 +192,7 @@ export function Navbar() {
             </span>
             <span className="leading-tight">
               <span className="block text-lg font-bold tracking-tight">Perso</span>
-              <span className="hidden text-[10px] text-white/60 sm:block">Livres & déco</span>
+              <span className="block text-[10px] leading-tight text-white/60">Entre toi et moi</span>
             </span>
           </Link>
 
@@ -220,6 +223,38 @@ export function Navbar() {
                   <span className="text-[11px] font-semibold tabular-nums">{user.walletBalance.toLocaleString("fr-FR")} F</span>
                 </div>
                 <NotificationBell onDark />
+                {!sellerMode && (
+                  <div className="relative hidden lg:block" ref={accountRef}>
+                    <button
+                      type="button"
+                      onClick={() => setAccountOpen((open) => !open)}
+                      className={`flex items-center gap-1 rounded px-2.5 py-1.5 text-[13px] font-medium ${
+                        accountActive ? "bg-white/15 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      Mon espace
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${accountOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {accountOpen && (
+                      <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-slate-700 shadow-lg">
+                        {accountNav.map(({ to, label, icon: Icon }) => (
+                          <Link
+                            key={to}
+                            to={to}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 text-[13px] ${
+                              location.pathname === to
+                                ? "bg-emerald-50 font-medium text-emerald-800"
+                                : "hover:bg-slate-50"
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center gap-2 border-l border-white/15 pl-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 text-[10px] font-semibold">
                     {initials}
@@ -278,77 +313,24 @@ export function Navbar() {
       </div>
 
       <nav className="bg-teal-800 text-white">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-2 py-1.5 sm:px-4">
-          <Link
-            to="/?rayon=livres"
-            className={`shrink-0 rounded px-3 py-1.5 text-[13px] font-medium ${
-              location.pathname === "/" && rayon !== "deco" ? "bg-white/15" : "hover:bg-white/10"
-            }`}
-          >
-            Livres
-          </Link>
-          <Link
-            to="/?rayon=deco"
-            className={`shrink-0 rounded px-3 py-1.5 text-[13px] font-medium ${
-              location.pathname === "/" && rayon === "deco" ? "bg-white/15" : "hover:bg-white/10"
-            }`}
-          >
-            Intérieur Déco
-          </Link>
-          <Link
-            to="/deposit"
-            className={`shrink-0 rounded px-3 py-1.5 text-[13px] font-medium ${
-              location.pathname === "/deposit" ? "bg-white/15" : "hover:bg-white/10"
-            }`}
-          >
-            Déposer une annonce
-          </Link>
-          {user && !sellerMode && (
-            <>
-              {desktopNav
-                .filter((item) => item.to !== "/" && item.to !== "/deposit")
-                .map(({ to, label }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={`hidden shrink-0 rounded px-3 py-1.5 text-[13px] font-medium lg:inline ${navLinkClass(
-                      location.pathname === to,
-                      navMode
-                    )}`}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              <div className="relative ml-auto hidden lg:block" ref={accountRef}>
-                <button
-                  type="button"
-                  onClick={() => setAccountOpen((open) => !open)}
-                  className={`flex items-center gap-1 rounded px-3 py-1.5 text-[13px] font-medium ${navLinkClass(accountActive, "default")}`}
-                >
-                  Mon espace
-                  <ChevronDown className={`h-3.5 w-3.5 ${accountOpen ? "rotate-180" : ""}`} />
-                </button>
-                {accountOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-slate-700 shadow-lg">
-                    {accountNav.map(({ to, label, icon: Icon }) => (
-                      <Link
-                        key={to}
-                        to={to}
-                        className={`flex items-center gap-2.5 px-3 py-2.5 text-[13px] ${
-                          location.pathname === to
-                            ? "bg-emerald-50 font-medium text-emerald-800"
-                            : "hover:bg-slate-50"
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto overflow-y-hidden px-2 py-1.5 sm:px-4">
+          {publicBarNav.map(({ to, label }) => {
+            const active =
+              to === "/"
+                ? location.pathname === "/"
+                : location.pathname === to;
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`shrink-0 rounded px-3 py-1.5 text-[13px] font-medium ${
+                  active ? "bg-white/15" : "hover:bg-white/10"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
           {sellerMode && (
             <Link
               to="/seller"
@@ -361,7 +343,7 @@ export function Navbar() {
           )}
         </div>
         {user && !sellerMode && (
-          <div className="flex gap-1 overflow-x-auto border-t border-white/10 px-2 py-1 lg:hidden">
+          <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-t border-white/10 px-2 py-1 lg:hidden">
             {mobileNav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}

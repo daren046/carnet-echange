@@ -11,6 +11,7 @@ import {
   CONDITION_LABELS,
   DECOR_SUBJECTS,
   LEVEL_LABELS,
+  LEVEL_OPTGROUPS,
   SUBJECT_LABELS,
   type BookCondition,
   type ListingCategory,
@@ -102,7 +103,7 @@ export function Deposit() {
       if (seller || user) {
         navigate("/seller");
       } else {
-        navigate(form.listingCategory === "DECOR" ? "/?rayon=deco" : "/?rayon=livres");
+        navigate(form.listingCategory === "DECOR" ? "/deco" : "/livres");
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -204,8 +205,12 @@ export function Deposit() {
                   onChange={(e) => setForm({ ...form, level: e.target.value as SchoolLevel })}
                   className={inputClass}
                 >
-                  {Object.entries(LEVEL_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
+                  {LEVEL_OPTGROUPS.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.levels.map((k) => (
+                        <option key={k} value={k}>{LEVEL_LABELS[k]}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

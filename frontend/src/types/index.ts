@@ -3,7 +3,8 @@ export type UserRole = "STUDENT" | "PARENT" | "SELLER" | "DELIVERER" | "LIBRARIA
 export type SchoolLevel =
   | "CP" | "CE1" | "CE2" | "CM1" | "CM2"
   | "SIXIEME" | "CINQUIEME" | "QUATRIEME" | "TROISIEME"
-  | "SECONDE" | "PREMIERE" | "TERMINALE";
+  | "SECONDE" | "PREMIERE" | "TERMINALE"
+  | "UNIVERSITE";
 
 export type Subject =
   | "MATHEMATIQUES" | "FRANCAIS" | "HISTOIRE_GEO" | "ANGLAIS"
@@ -147,7 +148,15 @@ export const LEVEL_LABELS: Record<SchoolLevel, string> = {
   CP: "CP", CE1: "CE1", CE2: "CE2", CM1: "CM1", CM2: "CM2",
   SIXIEME: "6ème", CINQUIEME: "5ème", QUATRIEME: "4ème", TROISIEME: "3ème",
   SECONDE: "Seconde", PREMIERE: "Première", TERMINALE: "Terminale",
+  UNIVERSITE: "Université",
 };
+
+export const LEVEL_OPTGROUPS: { label: string; levels: SchoolLevel[] }[] = [
+  { label: "Primaire", levels: ["CP", "CE1", "CE2", "CM1", "CM2"] },
+  { label: "Secondaire", levels: ["SIXIEME", "CINQUIEME", "QUATRIEME", "TROISIEME"] },
+  { label: "Lycée", levels: ["SECONDE", "PREMIERE", "TERMINALE"] },
+  { label: "Université", levels: ["UNIVERSITE"] },
+];
 
 export const SUBJECT_LABELS: Record<Subject, string> = {
   MATHEMATIQUES: "Mathématiques",

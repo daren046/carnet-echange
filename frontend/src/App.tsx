@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Home } from "./pages/Home";
+import { Browse } from "./pages/Browse";
 import { DelivererHome } from "./pages/DelivererHome";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
@@ -74,6 +75,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomeRouter />} />
+      <Route path="/livres" element={<Browse />} />
+      <Route path="/deco" element={<Browse />} />
+      <Route path="/annonces" element={<Browse />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/a-propos" element={<About />} />
