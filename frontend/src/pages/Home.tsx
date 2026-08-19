@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { searchBooks } from "../api/client";
 import {
   BrowseShell,
@@ -22,9 +22,24 @@ function byNewest(a: BookCopy, b: BookCopy) {
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }
 
+function categoryFromParam(value: string | null): CategoryId {
+  if (value === "livres") return "rayon-livres";
+  if (value === "deco") return "rayon-deco";
+  if (value === "divers") return "rayon-misc";
+  return "all";
+}
+
+function paramFromCategory(id: CategoryId): string | null {
+  if (id === "rayon-livres") return "livres";
+  if (id === "rayon-deco") return "deco";
+  if (id === "rayon-misc") return "divers";
+  return null;
+}
+
 export function Home() {
   const { user } = useAuth();
-  const [category, setCategory] = useState<CategoryId>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const category = categoryFromParam(searchParams.get("categorie"));
   const [books, setBooks] = useState<BookCopy[]>([]);
   const [loading, setLoading] = useState(true);
   const seller = isSellerOnly(user);
@@ -50,6 +65,12 @@ export function Home() {
   const visibleBooks = books
     .filter((b) => bookMatchesCategory(b.level, b.subject, b.listingCategory, category))
     .sort(byNewest);
+
+  const handleCategoryChange = (id: CategoryId) => {
+    const param = paramFromCategory(id);
+    if (param) setSearchParams({ categorie: param });
+    else setSearchParams({});
+  };
 
   const bookAction = () => {
     if (seller) {
@@ -106,7 +127,7 @@ export function Home() {
           </div>
         }
         activeCategory={category}
-        onCategoryChange={setCategory}
+        onCategoryChange={handleCategoryChange}
         galleryTitle={categoryGalleryTitle(category, "HOME")}
       >
         {loading ? (

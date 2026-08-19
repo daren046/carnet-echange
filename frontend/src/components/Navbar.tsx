@@ -34,8 +34,8 @@ const primaryNav = [
 const publicBarNav = [
   { to: "/", label: "Accueil" },
   { to: "/livres", label: "Livres" },
-  { to: "/deco", label: "Intérieur Déco" },
-  { to: "/divers", label: "Articles divers" },
+  { to: "/?categorie=deco", label: "Intérieur Déco" },
+  { to: "/?categorie=divers", label: "Articles divers" },
   { to: "/deposit", label: "Déposer une annonce" },
   { to: "/annonces", label: "Voir toutes les annonces" },
 ];
@@ -316,10 +316,15 @@ export function Navbar() {
       <nav className="bg-teal-800 text-white">
         <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto overflow-y-hidden px-2 py-1.5 sm:px-4">
           {publicBarNav.map(({ to, label }) => {
+            const categorie = searchParams.get("categorie");
             const active =
-              to === "/"
-                ? location.pathname === "/"
-                : location.pathname === to;
+              label === "Accueil"
+                ? location.pathname === "/" && !categorie
+                : label === "Intérieur Déco"
+                  ? (location.pathname === "/" && categorie === "deco") || location.pathname === "/deco"
+                  : label === "Articles divers"
+                    ? (location.pathname === "/" && categorie === "divers") || location.pathname === "/divers"
+                    : location.pathname === to;
             return (
               <Link
                 key={to}

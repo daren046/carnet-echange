@@ -67,7 +67,12 @@ export function categoryGalleryTitle(id: CategoryId, rayon: BrowseRayon = "BOOKS
     if (rayon === "HOME") return "Dernières annonces";
     return "Livres";
   }
-  return browseCategoriesFor(rayon).find((c) => c.id === id)?.label
+    if (rayon === "HOME") {
+      if (id === "rayon-livres") return "Dernières annonces — Livres";
+      if (id === "rayon-deco") return "Dernières annonces — Intérieur Déco";
+      if (id === "rayon-misc") return "Dernières annonces — Articles divers";
+    }
+    return browseCategoriesFor(rayon).find((c) => c.id === id)?.label
     ?? browseCategoriesFor("HOME").find((c) => c.id === id)?.label
     ?? "Annonces";
 }
