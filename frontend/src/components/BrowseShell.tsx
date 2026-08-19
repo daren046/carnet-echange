@@ -17,6 +17,7 @@ export const UNIVERSITY_LEVELS: SchoolLevel[] = ["UNIVERSITE"];
 export type LevelCategoryId = "primaire" | "secondaire" | "lycee" | "universite";
 export type RayonFilterId = "rayon-livres" | "rayon-deco";
 export type CategoryId = "all" | LevelCategoryId | RayonFilterId | Subject;
+export type BrowseRayon = ListingCategory | "ALL" | "HOME";
 
 export const LEVEL_CATEGORIES: { id: LevelCategoryId; label: string; desc: string }[] = [
   { id: "primaire", label: "Primaire", desc: "CP à CM2" },
@@ -25,7 +26,7 @@ export const LEVEL_CATEGORIES: { id: LevelCategoryId; label: string; desc: strin
   { id: "universite", label: "Université", desc: "Licence et master" },
 ];
 
-export function browseCategoriesFor(rayon: ListingCategory | "ALL"): { id: CategoryId; label: string }[] {
+export function browseCategoriesFor(rayon: BrowseRayon): { id: CategoryId; label: string }[] {
   if (rayon === "ALL") {
     return [
       { id: "all", label: "Tout voir" },
@@ -46,14 +47,15 @@ export function browseCategoriesFor(rayon: ListingCategory | "ALL"): { id: Categ
   ];
 }
 
-export function categoryGalleryTitle(id: CategoryId, rayon: ListingCategory | "ALL" = "BOOKS"): string {
+export function categoryGalleryTitle(id: CategoryId, rayon: BrowseRayon = "BOOKS"): string {
   if (id === "all") {
     if (rayon === "DECOR") return "Intérieur Déco";
     if (rayon === "ALL") return "Toutes les annonces";
+    if (rayon === "HOME") return "Dernières annonces";
     return "Livres";
   }
-  return browseCategoriesFor(rayon === "ALL" ? "BOOKS" : rayon).find((c) => c.id === id)?.label
-    ?? browseCategoriesFor("ALL").find((c) => c.id === id)?.label
+  return browseCategoriesFor(rayon).find((c) => c.id === id)?.label
+    ?? browseCategoriesFor("HOME").find((c) => c.id === id)?.label
     ?? "Annonces";
 }
 
@@ -85,6 +87,31 @@ function navButtonClass(active: boolean) {
   }`;
 }
 
+function CategoryButtons({
+  items,
+  activeCategory,
+  onCategoryChange,
+}: {
+  items: { id: CategoryId; label: string }[];
+  activeCategory: CategoryId;
+  onCategoryChange: (id: CategoryId) => void;
+}) {
+  return (
+    <>
+      {items.map((cat) => (
+        <button
+          key={cat.id}
+          type="button"
+          onClick={() => onCategoryChange(cat.id)}
+          className={navButtonClass(activeCategory === cat.id)}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </>
+  );
+}
+
 export function BrowseShell({
   banner,
   hero,
@@ -101,21 +128,18 @@ export function BrowseShell({
   onCategoryChange: (id: CategoryId) => void;
   extraFilter?: ReactNode;
   galleryTitle: string;
-  rayon?: ListingCategory | "ALL";
+  rayon?: BrowseRayon;
   children: ReactNode;
 }) {
-  const subjectItems =
-    rayon === "DECOR"
-      ? DECOR_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] }))
-      : BOOK_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] }));
+  const showBookGroups = rayon === "BOOKS" || rayon === "HOME";
 
   return (
     <>
       {banner}
       {hero && <div className="mx-auto max-w-3xl px-4 py-8 md:py-10">{hero}</div>}
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 lg:flex-row lg:gap-12">
-        <aside className="lg:w-52 lg:shrink-0">
-          <nav className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
+        <aside className="lg:w-56 lg:shrink-0">
+          <nav className="flex flex-col gap-1">
             <button
               type="button"
               onClick={() => onCategoryChange("all")}
@@ -136,48 +160,34 @@ export function BrowseShell({
               </>
             )}
 
-            {rayon === "BOOKS" && (
+            {showBookGroups && (
               <>
-                <p className="hidden px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:block">
+                <p className="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Par niveau
                 </p>
-                {LEVEL_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => onCategoryChange(cat.id)}
-                    className={navButtonClass(activeCategory === cat.id)}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-                <p className="hidden px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:block">
+                <CategoryButtons
+                  items={LEVEL_CATEGORIES}
+                  activeCategory={activeCategory}
+                  onCategoryChange={onCategoryChange}
+                />
+                <p className="mt-4 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                   Par matière
                 </p>
-                {subjectItems.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => onCategoryChange(cat.id)}
-                    className={navButtonClass(activeCategory === cat.id)}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+                <CategoryButtons
+                  items={BOOK_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] }))}
+                  activeCategory={activeCategory}
+                  onCategoryChange={onCategoryChange}
+                />
               </>
             )}
 
-            {rayon === "DECOR" &&
-              subjectItems.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => onCategoryChange(cat.id)}
-                  className={navButtonClass(activeCategory === cat.id)}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            {rayon === "DECOR" && (
+              <CategoryButtons
+                items={DECOR_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] }))}
+                activeCategory={activeCategory}
+                onCategoryChange={onCategoryChange}
+              />
+            )}
           </nav>
           {extraFilter && (
             <div className="mt-4 border-t border-slate-200 pt-4">{extraFilter}</div>
