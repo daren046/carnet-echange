@@ -5,7 +5,7 @@ import { Layout } from "../components/Layout";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { LEVEL_LABELS, ROLE_LABELS, type SchoolLevel, type Zone } from "../types";
-import { isDelivererOnly } from "../utils/roles";
+import { isDelivererOnly, isSellerOnly } from "../utils/roles";
 
 export function Profile() {
   const { user, refreshUser } = useAuth();
@@ -63,14 +63,15 @@ export function Profile() {
     }
   };
 
-  const student = user && !isDelivererOnly(user);
+  const student = user && !isDelivererOnly(user) && !isSellerOnly(user);
+  const seller = isSellerOnly(user);
 
   return (
     <Layout>
       <PageHeader
         title="Mon compte"
         subtitle="Mettez à jour vos informations, votre zone et votre mot de passe."
-        accent={isDelivererOnly(user) ? "orange" : "emerald"}
+        accent={isDelivererOnly(user) ? "orange" : seller ? "teal" : "emerald"}
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
         <Card className="max-w-xl">

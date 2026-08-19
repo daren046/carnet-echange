@@ -5,6 +5,7 @@ import fr.carnet.echange.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -50,6 +51,9 @@ public class SecurityConfig {
                                 "/api/v1/health",
                                 "/api/v1/stats"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/books").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/books/deposit").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

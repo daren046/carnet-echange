@@ -1,4 +1,4 @@
-export type UserRole = "STUDENT" | "PARENT" | "DELIVERER" | "LIBRARIAN" | "ADMIN";
+export type UserRole = "STUDENT" | "PARENT" | "SELLER" | "DELIVERER" | "LIBRARIAN" | "ADMIN";
 
 export type SchoolLevel =
   | "CP" | "CE1" | "CE2" | "CM1" | "CM2"
@@ -8,7 +8,10 @@ export type SchoolLevel =
 export type Subject =
   | "MATHEMATIQUES" | "FRANCAIS" | "HISTOIRE_GEO" | "ANGLAIS"
   | "ESPAGNOL" | "ALLEMAND" | "SVT" | "PHYSIQUE_CHIMIE"
-  | "TECHNOLOGIE" | "ARTS" | "MUSIQUE" | "EPS" | "AUTRE";
+  | "TECHNOLOGIE" | "ARTS" | "MUSIQUE" | "EPS" | "AUTRE"
+  | "MEUBLES" | "LUMINAIRES" | "TEXTILE" | "VAISSELLE" | "DECORATION";
+
+export type ListingCategory = "BOOKS" | "DECOR";
 
 export type BookCondition = "NEUF" | "BON" | "MOYEN" | "ABIME";
 export type CopyStatus = "AVAILABLE" | "RESERVED" | "IN_DELIVERY" | "DELIVERED" | "LIBRARY_BORROWED";
@@ -81,7 +84,7 @@ export interface BookCopy {
   id: number;
   title: string;
   subject: Subject;
-  level: SchoolLevel;
+  level: SchoolLevel | null;
   condition: BookCondition;
   photoUrl: string;
   depositorName: string;
@@ -90,6 +93,8 @@ export interface BookCopy {
   libraryMode: boolean;
   reservedByName: string | null;
   createdAt: string;
+  listingCategory: ListingCategory;
+  anonymous: boolean;
 }
 
 export interface Transaction {
@@ -158,7 +163,22 @@ export const SUBJECT_LABELS: Record<Subject, string> = {
   MUSIQUE: "Musique",
   EPS: "EPS",
   AUTRE: "Autre",
+  MEUBLES: "Meubles",
+  LUMINAIRES: "Luminaires",
+  TEXTILE: "Textile",
+  VAISSELLE: "Vaisselle",
+  DECORATION: "Décoration",
 };
+
+export const BOOK_SUBJECTS: Subject[] = [
+  "MATHEMATIQUES", "FRANCAIS", "HISTOIRE_GEO", "ANGLAIS",
+  "ESPAGNOL", "ALLEMAND", "SVT", "PHYSIQUE_CHIMIE",
+  "TECHNOLOGIE", "ARTS", "MUSIQUE", "EPS", "AUTRE",
+];
+
+export const DECOR_SUBJECTS: Subject[] = [
+  "MEUBLES", "LUMINAIRES", "TEXTILE", "VAISSELLE", "DECORATION",
+];
 
 export const CONDITION_LABELS: Record<BookCondition, string> = {
   NEUF: "Neuf",
@@ -184,6 +204,7 @@ export const COPY_STATUS_LABELS: Record<CopyStatus, string> = {
 export const ROLE_LABELS: Record<UserRole, string> = {
   STUDENT: "Élève",
   PARENT: "Parent",
+  SELLER: "Vendeur",
   DELIVERER: "Livreur",
   LIBRARIAN: "Bibliothécaire",
   ADMIN: "Admin",

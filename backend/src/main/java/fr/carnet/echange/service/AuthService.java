@@ -51,8 +51,8 @@ public class AuthService {
         Zone zone = zoneRepository.findByCode(dto.zoneCode())
                 .orElseThrow(() -> new IllegalArgumentException("Zone inconnue : " + dto.zoneCode()));
 
-        if (dto.role() != UserRole.STUDENT && dto.role() != UserRole.PARENT) {
-            throw new IllegalArgumentException("Seuls les profils Élève et Parent sont autorisés à l'inscription");
+        if (dto.role() != UserRole.STUDENT && dto.role() != UserRole.PARENT && dto.role() != UserRole.SELLER) {
+            throw new IllegalArgumentException("Seuls les profils Élève, Parent et Vendeur sont autorisés à l'inscription");
         }
 
         User user = new User(
@@ -61,15 +61,22 @@ public class AuthService {
                 dto.email(),
                 passwordEncoder.encode(dto.password()),
                 dto.role(),
-                dto.schoolLevel(),
+                dto.role() == UserRole.SELLER ? null : dto.schoolLevel(),
                 zone
         );
         user = userRepository.save(user);
         stampService.grantWelcomeBonus(user);
-        notificationService.notify(user, NotificationType.WELCOME,
-                "Bienvenue sur Carnet d'Échange",
-                "Vous avez reçu 1 tampon de bienvenue. Déposez un manuel ou parcourez le catalogue.",
-                "/catalog");
+        if (dto.role() == UserRole.SELLER) {
+            notificationService.notify(user, NotificationType.WELCOME,
+                    "Bienvenue dans l'espace vendeur",
+                    "Déposez vos manuels : vous suivrez vos annonces et vos ventes ici, à l'écart du catalogue public.",
+                    "/seller");
+        } else {
+            notificationService.notify(user, NotificationType.WELCOME,
+                    "Bienvenue sur Perso",
+                    "Vous avez reçu 1 tampon de bienvenue. Déposez un manuel ou parcourez le catalogue.",
+                    "/catalog");
+        }
         return user;
     }
 

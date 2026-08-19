@@ -50,6 +50,7 @@ export function Catalog() {
         libraryMode: false,
         zoneId: zoneFilter !== "" ? zoneFilter : undefined,
         title: title || undefined,
+        listingCategory: "BOOKS",
       });
       setBooks(res.data.filter((b) => bookMatchesCategory(b.level, b.subject, category)));
     } finally {
@@ -156,7 +157,7 @@ export function Catalog() {
                 size="gallery"
                 book={{
                   ...book,
-                  level: LEVEL_LABELS[book.level],
+                  level: book.level ? LEVEL_LABELS[book.level] : null,
                   subject: SUBJECT_LABELS[book.subject],
                   condition: CONDITION_LABELS[book.condition],
                 }}

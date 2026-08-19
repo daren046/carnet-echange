@@ -46,7 +46,7 @@ export function MyDeposits() {
               <div className="p-4">
                 <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Badge tone="emerald">{LEVEL_LABELS[book.level]}</Badge>
+                  {book.level && <Badge tone="emerald">{LEVEL_LABELS[book.level]}</Badge>}
                   <Badge>{SUBJECT_LABELS[book.subject]}</Badge>
                   <Badge>{CONDITION_LABELS[book.condition]}</Badge>
                 </div>

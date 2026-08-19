@@ -30,7 +30,7 @@ export function Login() {
   return (
     <Layout>
       <div className="mx-auto max-w-md pt-6">
-        <PageHeader title="Connexion" subtitle="Accédez à votre carnet d'échange" />
+        <PageHeader title="Connexion" subtitle="Identifiez-vous pour réserver, ou publiez en anonyme sans compte." />
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

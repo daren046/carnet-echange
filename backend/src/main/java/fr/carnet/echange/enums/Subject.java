@@ -13,5 +13,10 @@ public enum Subject {
     ARTS,
     MUSIQUE,
     EPS,
-    AUTRE
+    AUTRE,
+    MEUBLES,
+    LUMINAIRES,
+    TEXTILE,
+    VAISSELLE,
+    DECORATION
 }

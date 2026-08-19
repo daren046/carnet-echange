@@ -2,6 +2,7 @@ package fr.carnet.echange.dto.book;
 
 import fr.carnet.echange.enums.BookCondition;
 import fr.carnet.echange.enums.CopyStatus;
+import fr.carnet.echange.enums.ListingCategory;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
 
@@ -19,5 +20,7 @@ public record BookCopyDto(
         CopyStatus status,
         boolean libraryMode,
         String reservedByName,
-        Instant createdAt
+        Instant createdAt,
+        ListingCategory listingCategory,
+        boolean anonymous
 ) {}

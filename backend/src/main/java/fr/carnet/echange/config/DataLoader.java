@@ -4,6 +4,7 @@ import fr.carnet.echange.entity.BookCopy;
 import fr.carnet.echange.entity.User;
 import fr.carnet.echange.entity.Zone;
 import fr.carnet.echange.enums.BookCondition;
+import fr.carnet.echange.enums.CopyStatus;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
 import fr.carnet.echange.enums.UserRole;
@@ -12,6 +13,7 @@ import fr.carnet.echange.repository.NotificationRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
 import fr.carnet.echange.entity.Notification;
+import fr.carnet.echange.enums.ListingCategory;
 import fr.carnet.echange.enums.NotificationType;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,7 +44,10 @@ public class DataLoader implements CommandLineRunner {
         seedZones();
         seedUsers();
         seedBooks();
+        seedSellerBooks();
+        seedDecorItems();
         seedDemoNotifications();
+        migrateListingCategory();
     }
 
     private void seedZones() {
@@ -96,6 +101,22 @@ public class DataLoader implements CommandLineRunner {
             karim.setStampBalance(3);
             karim.setWalletBalance(6000);
             userRepository.save(karim);
+        }
+
+        if (userRepository.findByEmail("vendeur@carnet.fr").isEmpty()) {
+            Zone est = zoneRepository.findByCode("EST").orElseThrow();
+            User seller = new User("Awa", "Touré", "vendeur@carnet.fr",
+                    passwordEncoder.encode("demo1234"), UserRole.SELLER, null, est);
+            seller.setStampBalance(2);
+            seller.setWalletBalance(15000);
+            userRepository.save(seller);
+        }
+
+        if (userRepository.findByEmail("anonyme@perso.local").isEmpty()) {
+            Zone centre = zoneRepository.findByCode("CENTRE").orElseThrow();
+            User anon = new User("Utilisateur", "Anonyme", "anonyme@perso.local",
+                    passwordEncoder.encode("no-login-" + System.nanoTime()), UserRole.SELLER, null, centre);
+            userRepository.save(anon);
         }
     }
 
@@ -159,12 +180,101 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("✅ " + bookCopyRepository.count() + " manuels d'exemple chargés");
     }
 
+    private void seedSellerBooks() {
+        User seller = userRepository.findByEmail("vendeur@carnet.fr").orElse(null);
+        if (seller == null) {
+            return;
+        }
+        if (!bookCopyRepository.findByDepositorIdOrderByCreatedAtDesc(seller.getId()).isEmpty()) {
+            return;
+        }
+
+        User demo = userRepository.findByEmail("demo@carnet.fr").orElse(null);
+        User paul = userRepository.findByEmail("paul@carnet.fr").orElse(null);
+        Zone est = zoneRepository.findByCode("EST").orElseThrow();
+
+        saveBook("Maths 4ème — Transmath", Subject.MATHEMATIQUES, SchoolLevel.QUATRIEME,
+                BookCondition.BON, img(3), seller, est, false);
+        saveBook("Français 3ème — Hatier", Subject.FRANCAIS, SchoolLevel.TROISIEME,
+                BookCondition.NEUF, img(1), seller, est, false);
+
+        BookCopy reserved = saveBook("Anglais 5ème — Enjoy English", Subject.ANGLAIS, SchoolLevel.CINQUIEME,
+                BookCondition.BON, img(4), seller, est, false);
+        reserved.setStatus(CopyStatus.RESERVED);
+        if (demo != null) {
+            reserved.setReservedBy(demo);
+        }
+        bookCopyRepository.save(reserved);
+
+        BookCopy delivered = saveBook("Histoire-Géo 6ème — Belin", Subject.HISTOIRE_GEO, SchoolLevel.SIXIEME,
+                BookCondition.MOYEN, img(2), seller, est, false);
+        delivered.setStatus(CopyStatus.DELIVERED);
+        if (paul != null) {
+            delivered.setReservedBy(paul);
+        }
+        bookCopyRepository.save(delivered);
+    }
+
+    private void seedDecorItems() {
+        User seller = userRepository.findByEmail("vendeur@carnet.fr").orElse(null);
+        User sophie = userRepository.findByEmail("sophie@carnet.fr").orElse(null);
+        User anon = userRepository.findByEmail("anonyme@perso.local").orElse(null);
+        if (seller == null) {
+            return;
+        }
+        boolean already = bookCopyRepository.findByDepositorIdOrderByCreatedAtDesc(seller.getId()).stream()
+                .anyMatch(b -> b.getListingCategory() == ListingCategory.DECOR);
+        if (already) {
+            return;
+        }
+
+        Zone est = zoneRepository.findByCode("EST").orElseThrow();
+        Zone centre = zoneRepository.findByCode("CENTRE").orElseThrow();
+
+        BookCopy sofa = saveBook("Canapé 3 places — tissu beige", Subject.MEUBLES, SchoolLevel.CM2,
+                BookCondition.BON, img(12), seller, est, false);
+        sofa.setListingCategory(ListingCategory.DECOR);
+        bookCopyRepository.save(sofa);
+
+        BookCopy lamp = saveBook("Lampe de salon en rotin", Subject.LUMINAIRES, SchoolLevel.CM2,
+                BookCondition.NEUF, img(8), seller, est, false);
+        lamp.setListingCategory(ListingCategory.DECOR);
+        bookCopyRepository.save(lamp);
+
+        if (sophie != null) {
+            BookCopy curtain = saveBook("Rideaux lin 140x260", Subject.TEXTILE, SchoolLevel.CM2,
+                    BookCondition.BON, img(9), sophie, est, false);
+            curtain.setListingCategory(ListingCategory.DECOR);
+            bookCopyRepository.save(curtain);
+        }
+        if (anon != null) {
+            BookCopy vase = saveBook("Vase céramique artisanat local", Subject.DECORATION, SchoolLevel.CM2,
+                    BookCondition.BON, img(13), anon, centre, false);
+            vase.setListingCategory(ListingCategory.DECOR);
+            vase.setAnonymous(true);
+            bookCopyRepository.save(vase);
+        }
+    }
+
+    private void migrateListingCategory() {
+        for (BookCopy copy : bookCopyRepository.findAll()) {
+            boolean decorSubject = copy.getSubject() == Subject.MEUBLES
+                    || copy.getSubject() == Subject.LUMINAIRES
+                    || copy.getSubject() == Subject.TEXTILE
+                    || copy.getSubject() == Subject.VAISSELLE
+                    || copy.getSubject() == Subject.DECORATION;
+            copy.setListingCategory(decorSubject ? ListingCategory.DECOR : ListingCategory.BOOKS);
+            bookCopyRepository.save(copy);
+        }
+    }
+
     private void seedDemoNotifications() {
         if (notificationRepository.count() > 0) {
             return;
         }
         User demo = userRepository.findByEmail("demo@carnet.fr").orElse(null);
         User livreur = userRepository.findByEmail("livreur@carnet.fr").orElse(null);
+        User seller = userRepository.findByEmail("vendeur@carnet.fr").orElse(null);
         if (demo != null) {
             notificationRepository.save(new Notification(demo, NotificationType.WELCOME,
                     "Bienvenue Marie",
@@ -177,11 +287,17 @@ public class DataLoader implements CommandLineRunner {
                     "Des livraisons attendent dans votre secteur. Consultez l'espace livreur.",
                     "/deliveries"));
         }
+        if (seller != null) {
+            notificationRepository.save(new Notification(seller, NotificationType.WELCOME,
+                    "Espace vendeur prêt",
+                    "Vos annonces et vos ventes sont regroupées ici, à l'écart du catalogue public.",
+                    "/seller"));
+        }
     }
 
-    private void saveBook(String title, Subject subject, SchoolLevel level, BookCondition condition,
-                          String photoUrl, User depositor, Zone zone, boolean libraryMode) {
-        bookCopyRepository.save(new BookCopy(title, subject, level, condition, photoUrl, depositor, zone, libraryMode));
+    private BookCopy saveBook(String title, Subject subject, SchoolLevel level, BookCondition condition,
+                              String photoUrl, User depositor, Zone zone, boolean libraryMode) {
+        return bookCopyRepository.save(new BookCopy(title, subject, level, condition, photoUrl, depositor, zone, libraryMode));
     }
 
     /** Photos libres Unsplash (manuels / livres scolaires) */

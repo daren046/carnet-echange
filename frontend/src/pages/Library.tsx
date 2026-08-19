@@ -111,7 +111,7 @@ export function Library() {
                 key={book.id}
                 book={{
                   ...book,
-                  level: LEVEL_LABELS[book.level],
+                  level: book.level ? LEVEL_LABELS[book.level] : null,
                   subject: SUBJECT_LABELS[book.subject],
                   condition: CONDITION_LABELS[book.condition],
                   libraryMode: true,

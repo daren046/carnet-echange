@@ -1,6 +1,13 @@
 import { Star } from "lucide-react";
 import type { ReactNode } from "react";
-import { SUBJECT_LABELS, type SchoolLevel, type Subject } from "../types";
+import {
+  BOOK_SUBJECTS,
+  DECOR_SUBJECTS,
+  SUBJECT_LABELS,
+  type ListingCategory,
+  type SchoolLevel,
+  type Subject,
+} from "../types";
 
 export const PRIMARY_LEVELS: SchoolLevel[] = ["CP", "CE1", "CE2", "CM1", "CM2"];
 export const COLLEGE_LEVELS: SchoolLevel[] = ["SIXIEME", "CINQUIEME", "QUATRIEME", "TROISIEME"];
@@ -8,24 +15,36 @@ export const LYCEE_LEVELS: SchoolLevel[] = ["SECONDE", "PREMIERE", "TERMINALE"];
 
 export type CategoryId = "all" | "primaire" | "college" | "lycee" | Subject;
 
-export const BROWSE_CATEGORIES: { id: CategoryId; label: string }[] = [
-  { id: "all", label: "Tout voir" },
-  { id: "primaire", label: "Primaire" },
-  { id: "college", label: "Collège" },
-  { id: "lycee", label: "Lycée" },
-  ...(Object.entries(SUBJECT_LABELS) as [Subject, string][]).map(([id, label]) => ({ id, label })),
-];
-
-export function categoryGalleryTitle(id: CategoryId): string {
-  if (id === "all") return "Tous les manuels";
-  return BROWSE_CATEGORIES.find((c) => c.id === id)?.label ?? "Manuels";
+export function browseCategoriesFor(rayon: ListingCategory): { id: CategoryId; label: string }[] {
+  if (rayon === "DECOR") {
+    return [
+      { id: "all", label: "Tout voir" },
+      ...DECOR_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] })),
+    ];
+  }
+  return [
+    { id: "all", label: "Tout voir" },
+    { id: "primaire", label: "Primaire" },
+    { id: "college", label: "Collège" },
+    { id: "lycee", label: "Lycée" },
+    ...BOOK_SUBJECTS.map((id) => ({ id, label: SUBJECT_LABELS[id] })),
+  ];
 }
 
-export function bookMatchesCategory(level: SchoolLevel, subject: Subject, category: CategoryId): boolean {
+export function categoryGalleryTitle(id: CategoryId, rayon: ListingCategory = "BOOKS"): string {
+  if (id === "all") return rayon === "DECOR" ? "Intérieur Déco" : "Livres";
+  return browseCategoriesFor(rayon).find((c) => c.id === id)?.label ?? "Annonces";
+}
+
+export function bookMatchesCategory(
+  level: SchoolLevel | null,
+  subject: Subject,
+  category: CategoryId
+): boolean {
   if (category === "all") return true;
-  if (category === "primaire") return PRIMARY_LEVELS.includes(level);
-  if (category === "college") return COLLEGE_LEVELS.includes(level);
-  if (category === "lycee") return LYCEE_LEVELS.includes(level);
+  if (category === "primaire") return level != null && PRIMARY_LEVELS.includes(level);
+  if (category === "college") return level != null && COLLEGE_LEVELS.includes(level);
+  if (category === "lycee") return level != null && LYCEE_LEVELS.includes(level);
   return subject === category;
 }
 
@@ -40,6 +59,7 @@ export function BrowseShell({
   onCategoryChange,
   extraFilter,
   galleryTitle,
+  rayon = "BOOKS",
   children,
 }: {
   banner?: ReactNode;
@@ -48,16 +68,18 @@ export function BrowseShell({
   onCategoryChange: (id: CategoryId) => void;
   extraFilter?: ReactNode;
   galleryTitle: string;
+  rayon?: ListingCategory;
   children: ReactNode;
 }) {
+  const categories = browseCategoriesFor(rayon);
   return (
     <>
       {banner}
-      {hero && <div className="mx-auto max-w-3xl px-4 py-10 md:py-14">{hero}</div>}
+      {hero && <div className="mx-auto max-w-3xl px-4 py-8 md:py-10">{hero}</div>}
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 lg:flex-row lg:gap-12">
         <aside className="lg:w-52 lg:shrink-0">
           <nav className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
-            {BROWSE_CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const active = cat.id === activeCategory;
               return (
                 <button

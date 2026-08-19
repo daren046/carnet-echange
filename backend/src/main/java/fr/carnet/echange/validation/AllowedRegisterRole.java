@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = RegisterRoleValidator.class)
 @Documented
 public @interface AllowedRegisterRole {
-    String message() default "Seuls les profils Élève et Parent sont autorisés à l'inscription";
+    String message() default "Seuls les profils Élève, Parent et Vendeur sont autorisés à l'inscription";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

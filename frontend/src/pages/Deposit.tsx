@@ -1,31 +1,62 @@
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
-import { depositBook } from "../api/client";
+import { depositBook, getZones } from "../api/client";
 import { Layout } from "../components/Layout";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
+  BOOK_SUBJECTS,
   CONDITION_LABELS,
+  DECOR_SUBJECTS,
   LEVEL_LABELS,
   SUBJECT_LABELS,
   type BookCondition,
+  type ListingCategory,
   type SchoolLevel,
   type Subject,
+  type Zone,
 } from "../types";
+import { isSellerOnly } from "../utils/roles";
 
 export function Deposit() {
   const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const seller = isSellerOnly(user);
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const initialRayon: ListingCategory = searchParams.get("rayon") === "deco" ? "DECOR" : "BOOKS";
   const [form, setForm] = useState({
     title: "",
-    subject: "MATHEMATIQUES" as Subject,
+    listingCategory: initialRayon,
+    subject: (initialRayon === "DECOR" ? "MEUBLES" : "MATHEMATIQUES") as Subject,
     level: "SIXIEME" as SchoolLevel,
     condition: "BON" as BookCondition,
     libraryMode: false,
+    anonymous: !user,
+    zoneCode: "",
   });
+
+  useEffect(() => {
+    getZones().then((res) => {
+      setZones(res.data);
+      if (res.data[0]) {
+        setForm((f) => ({ ...f, zoneCode: f.zoneCode || res.data[0].code }));
+      }
+    });
+  }, []);
+
+  const setRayon = (listingCategory: ListingCategory) => {
+    setForm((f) => ({
+      ...f,
+      listingCategory,
+      subject: listingCategory === "DECOR" ? "MEUBLES" : "MATHEMATIQUES",
+    }));
+  };
 
   const handlePhoto = (file: File | undefined) => {
     if (!file) return;
@@ -39,27 +70,40 @@ export function Deposit() {
       toast.error("La photo est obligatoire");
       return;
     }
-    if (!user) {
-      toast.info("Connectez-vous pour déposer un livre");
-      return;
-    }
 
     const data = new FormData();
     data.append("title", form.title);
     data.append("subject", form.subject);
-    data.append("level", form.level);
+    if (form.listingCategory === "BOOKS") {
+      data.append("level", form.level);
+    }
     data.append("condition", form.condition);
-    data.append("libraryMode", String(form.libraryMode));
+    data.append("libraryMode", String(form.libraryMode && form.listingCategory === "BOOKS"));
+    data.append("listingCategory", form.listingCategory);
+    data.append("anonymous", String(form.anonymous || !user));
     data.append("photo", file);
+    if (!user) {
+      data.append("zoneCode", form.zoneCode);
+    }
 
     setLoading(true);
     try {
       const res = await depositBook(data);
-      toast.success(res.message || "Livre déposé — +1 tampon !");
-      setForm({ title: "", subject: "MATHEMATIQUES", level: "SIXIEME", condition: "BON", libraryMode: false });
+      toast.success(res.message || "Annonce publiée");
+      setForm((f) => ({
+        ...f,
+        title: "",
+        libraryMode: false,
+        anonymous: !user,
+      }));
       setPreview(null);
       if (fileRef.current) fileRef.current.value = "";
-      await refreshUser();
+      if (user) await refreshUser();
+      if (seller || user) {
+        navigate("/seller");
+      } else {
+        navigate(form.listingCategory === "DECOR" ? "/?rayon=deco" : "/?rayon=livres");
+      }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(msg || "Erreur lors du dépôt");
@@ -68,16 +112,50 @@ export function Deposit() {
     }
   };
 
+  const subjects = form.listingCategory === "DECOR" ? DECOR_SUBJECTS : BOOK_SUBJECTS;
+
   return (
     <Layout>
       <PageHeader
-        title="Déposer un manuel"
-        subtitle={form.libraryMode ? "Mode bibliothèque — emprunt avec caution, sans tampon." : "Ajoutez une photo et les informations — vous gagnez 1 tampon."}
+        title="Déposer une annonce"
+        subtitle={
+          user
+            ? "Livres ou intérieur déco. Vous pouvez masquer votre nom."
+            : "Publiez sans créer de compte : l’annonce apparaît comme anonyme."
+        }
+        accent={seller ? "teal" : "emerald"}
       />
       <Card className="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700">Photo du livre *</label>
+            <p className="text-sm font-medium text-slate-700">Rayon</p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setRayon("BOOKS")}
+                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                  form.listingCategory === "BOOKS"
+                    ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 text-slate-600"
+                }`}
+              >
+                Livres
+              </button>
+              <button
+                type="button"
+                onClick={() => setRayon("DECOR")}
+                className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                  form.listingCategory === "DECOR"
+                    ? "border-emerald-700 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 text-slate-600"
+                }`}
+              >
+                Intérieur Déco
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Photo *</label>
             <div
               onClick={() => fileRef.current?.click()}
               className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-10 hover:border-emerald-400"
@@ -95,45 +173,101 @@ export function Deposit() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">Titre</label>
-            <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} placeholder="Ex. Transmath 6ème" />
+            <input
+              required
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className={inputClass}
+              placeholder={form.listingCategory === "DECOR" ? "Ex. Canapé 3 places" : "Ex. Transmath 6ème"}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Matière</label>
-              <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value as Subject })} className={inputClass}>
-                {Object.entries(SUBJECT_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
+              <label className="block text-sm font-medium text-slate-700">
+                {form.listingCategory === "DECOR" ? "Type" : "Matière"}
+              </label>
+              <select
+                value={form.subject}
+                onChange={(e) => setForm({ ...form, subject: e.target.value as Subject })}
+                className={inputClass}
+              >
+                {subjects.map((k) => (
+                  <option key={k} value={k}>{SUBJECT_LABELS[k]}</option>
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Niveau</label>
-              <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value as SchoolLevel })} className={inputClass}>
-                {Object.entries(LEVEL_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </div>
+            {form.listingCategory === "BOOKS" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700">Niveau</label>
+                <select
+                  value={form.level}
+                  onChange={(e) => setForm({ ...form, level: e.target.value as SchoolLevel })}
+                  className={inputClass}
+                >
+                  {Object.entries(LEVEL_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700">État</label>
-            <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value as BookCondition })} className={inputClass}>
+            <select
+              value={form.condition}
+              onChange={(e) => setForm({ ...form, condition: e.target.value as BookCondition })}
+              className={inputClass}
+            >
               {Object.entries(CONDITION_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
             </select>
           </div>
+          {!user && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Quartier</label>
+              <select
+                required
+                value={form.zoneCode}
+                onChange={(e) => setForm({ ...form, zoneCode: e.target.value })}
+                className={inputClass}
+              >
+                {zones.map((z) => (
+                  <option key={z.code} value={z.code}>{z.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {user && form.listingCategory === "BOOKS" && !seller && (
+            <label className="flex items-start gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                checked={form.libraryMode}
+                onChange={(e) => setForm({ ...form, libraryMode: e.target.checked })}
+                className="mt-0.5 rounded border-slate-300 text-emerald-600"
+              />
+              Déposer en mode bibliothèque (emprunt avec caution, pas de tampon)
+            </label>
+          )}
           <label className="flex items-start gap-2 text-sm text-slate-600">
             <input
               type="checkbox"
-              checked={form.libraryMode}
-              onChange={(e) => setForm({ ...form, libraryMode: e.target.checked })}
+              checked={form.anonymous || !user}
+              onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
+              disabled={!user}
               className="mt-0.5 rounded border-slate-300 text-emerald-600"
             />
-            Déposer en mode bibliothèque (emprunt avec caution, pas de tampon)
+            Publier en utilisateur anonyme (votre nom n’apparaît pas)
           </label>
-          <PrimaryButton type="submit" disabled={loading || !user} className="w-full py-3">
-            {loading ? "Dépôt en cours..." : "Déposer le livre"}
+          {!user && (
+            <p className="text-xs text-slate-400">
+              Sans compte, l’annonce est forcément anonyme.{" "}
+              <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
+              {" "}si vous voulez suivre vos ventes.
+            </p>
+          )}
+          <PrimaryButton type="submit" disabled={loading} className="w-full py-3">
+            {loading ? "Publication..." : "Publier l’annonce"}
           </PrimaryButton>
         </form>
       </Card>

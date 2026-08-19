@@ -6,7 +6,7 @@ import { Layout } from "../components/Layout";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { LEVEL_LABELS, ROLE_LABELS, type SchoolLevel, type UserRole, type Zone } from "../types";
 
-const REGISTER_ROLES: UserRole[] = ["STUDENT", "PARENT"];
+const REGISTER_ROLES: UserRole[] = ["STUDENT", "PARENT", "SELLER"];
 
 export function Register() {
   const navigate = useNavigate();
@@ -87,6 +87,11 @@ export function Register() {
                   ))}
                 </select>
               </div>
+            )}
+            {form.role === "SELLER" && (
+              <p className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-800">
+                Compte vendeur : vous déposez vos manuels et suivez uniquement vos livres et vos ventes, à l’écart du catalogue public.
+              </p>
             )}
             <div>
               <label className="block text-sm font-medium text-slate-700">Zone de livraison</label>

@@ -1,0 +1,155 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Package, ShoppingBag, Store, Truck } from "lucide-react";
+import { getMyDeposits } from "../api/client";
+import { AuthenticatedImage } from "../components/AuthenticatedImage";
+import { Layout } from "../components/Layout";
+import { Badge, EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
+import { useAuth } from "../context/AuthContext";
+import {
+  CONDITION_LABELS,
+  COPY_STATUS_LABELS,
+  LEVEL_LABELS,
+  SUBJECT_LABELS,
+  type BookCopy,
+  type CopyStatus,
+} from "../types";
+import { isSellerOnly } from "../utils/roles";
+
+type Tab = "listings" | "sales";
+
+const SALE_STATUSES: CopyStatus[] = ["RESERVED", "IN_DELIVERY", "DELIVERED"];
+
+function statusTone(status: CopyStatus) {
+  if (status === "AVAILABLE") return "green" as const;
+  if (status === "RESERVED") return "amber" as const;
+  if (status === "IN_DELIVERY") return "blue" as const;
+  if (status === "DELIVERED") return "emerald" as const;
+  if (status === "LIBRARY_BORROWED") return "violet" as const;
+  return "slate" as const;
+}
+
+export function SellerHome() {
+  const { user } = useAuth();
+  const [books, setBooks] = useState<BookCopy[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("listings");
+
+  useEffect(() => {
+    getMyDeposits()
+      .then((res) => setBooks(res.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const listings = useMemo(
+    () => books.filter((b) => b.status === "AVAILABLE" || b.status === "LIBRARY_BORROWED"),
+    [books]
+  );
+  const sales = useMemo(
+    () => books.filter((b) => SALE_STATUSES.includes(b.status)),
+    [books]
+  );
+
+  const stats = [
+    { label: "En vente", value: listings.filter((b) => b.status === "AVAILABLE").length, icon: Store },
+    { label: "Réservés", value: books.filter((b) => b.status === "RESERVED").length, icon: Package },
+    { label: "Livrés", value: books.filter((b) => b.status === "DELIVERED").length, icon: Truck },
+    { label: "Ventes", value: sales.length, icon: ShoppingBag },
+  ];
+
+  const visible = tab === "listings" ? listings : sales;
+
+  return (
+    <Layout>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <PageHeader
+          title={`Bonjour ${user?.firstName ?? ""}`}
+          subtitle="Ici, uniquement vos annonces et vos ventes — le catalogue public reste sur l’accueil."
+          accent={isSellerOnly(user) ? "teal" : "emerald"}
+        />
+        <Link to="/deposit" className="mb-8 shrink-0">
+          <PrimaryButton className="w-full sm:w-auto">Déposer une annonce</PrimaryButton>
+        </Link>
+      </div>
+
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
+              <Icon className="h-4 w-4 text-teal-700" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">{value}</p>
+          </div>
+        ))}
+      </section>
+
+      <div className="mt-8 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+        <button
+          type="button"
+          onClick={() => setTab("listings")}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+            tab === "listings" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Mes livres ({listings.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("sales")}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+            tab === "sales" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Mes ventes ({sales.length})
+        </button>
+      </div>
+
+      <div className="mt-6">
+        {loading ? (
+          <LoadingState />
+        ) : visible.length === 0 ? (
+          <EmptyState
+            message={
+              tab === "listings"
+                ? "Aucun livre en vente pour le moment. Déposez un manuel pour le voir apparaître ici."
+                : "Pas encore de vente. Dès qu’un acheteur réserve l’un de vos livres, il s’affiche ici."
+            }
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {visible.map((book) => (
+              <div key={book.id} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                  <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {book.listingCategory !== "DECOR" && book.level && (
+                      <Badge tone="emerald">{LEVEL_LABELS[book.level]}</Badge>
+                    )}
+                    <Badge>{book.listingCategory === "DECOR" ? "Déco" : "Livre"}</Badge>
+                    <Badge>{SUBJECT_LABELS[book.subject]}</Badge>
+                    <Badge>{CONDITION_LABELS[book.condition]}</Badge>
+                    {book.anonymous && <Badge>Anonyme</Badge>}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <Badge tone={statusTone(book.status)}>{COPY_STATUS_LABELS[book.status]}</Badge>
+                    {book.reservedByName && book.status !== "AVAILABLE" && (
+                      <span className="truncate text-xs text-slate-400">→ {book.reservedByName}</span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    {tab === "sales" ? "Mouvement du" : "Déposé le"}{" "}
+                    {new Date(book.createdAt).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}

@@ -7,16 +7,24 @@ import type { ImpactStats } from "../types";
 
 const FAQ = [
   {
+    q: "Je dois m’inscrire pour regarder ?",
+    a: "Non. Sur Perso, vous parcourez Livres et Intérieur Déco sans compte. À Ouaga, beaucoup préfèrent d’abord voir ce qui existe.",
+  },
+  {
+    q: "Puis-je publier sans donner mon nom ?",
+    a: "Oui. Cochez « utilisateur anonyme » : l’annonce s’affiche sans votre identité. Sans compte, la publication est forcément anonyme.",
+  },
+  {
     q: "Comment fonctionne un tampon ?",
-    a: "Vous déposez un manuel avec photo : vous gagnez 1 tampon. Pour récupérer un autre livre, vous dépensez 1 tampon. L’échange reste gratuit, la livraison est à 1 000 F.",
+    a: "Vous déposez un livre (avec votre compte, sans anonymat) : vous gagnez 1 tampon. Pour récupérer un autre livre, vous dépensez 1 tampon. La livraison est à 1 000 F.",
   },
   {
     q: "Pourquoi 1 000 F de livraison ?",
-    a: "Le livre lui-même n’est pas vendu. Les 1 000 F paient le livreur qui ramasse et dépose dans votre zone, pour regrouper les tournées.",
+    a: "Les 1 000 F paient le livreur qui ramasse et dépose dans votre zone, pour regrouper les tournées.",
   },
   {
     q: "Qui peut s’inscrire ?",
-    a: "Les élèves et les parents. Les livreurs sont créés par l’équipe. Un tampon de bienvenue est offert à l’inscription.",
+    a: "Élèves, parents et vendeurs. Les livreurs sont créés par l’équipe. Un tampon de bienvenue est offert à l’inscription.",
   },
   {
     q: "C’est quoi la bibliothèque ?",
@@ -24,11 +32,7 @@ const FAQ = [
   },
   {
     q: "Puis-je annuler une commande ?",
-    a: "Oui, tant que le livreur n’a pas pris la tournée. Le tampon et les 1 000 F sont alors remboursés.",
-  },
-  {
-    q: "Le Mobile Money est-il réel ?",
-    a: "Dans cette version, Orange Money, MTN et Moov sont simulés pour tester le parcours. En production, les API opérateurs seraient branchées.",
+    a: "Oui, tant que le livreur n’a pas pris la tournée. Le tampon et les 1 000 F sont alors renvoyés.",
   },
 ];
 
@@ -56,7 +60,7 @@ export function About() {
     <Layout>
       <PageHeader
         title="Impact & FAQ"
-        subtitle="Donner un manuel, c’est éviter d’en racheter un neuf. Voici l’effet du réseau et les réponses aux questions des familles."
+        subtitle="Livres et intérieur déco, sans obligation de créer un compte. Voici l’effet du réseau et les réponses utiles."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

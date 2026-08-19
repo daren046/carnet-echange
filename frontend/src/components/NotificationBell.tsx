@@ -9,7 +9,7 @@ import {
 } from "../api/client";
 import type { AppNotification } from "../types";
 
-export function NotificationBell() {
+export function NotificationBell({ onDark = false }: { onDark?: boolean }) {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -69,7 +69,11 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={toggle}
-        className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+        className={`relative rounded-lg p-2 ${
+          onDark
+            ? "text-white/80 hover:bg-white/10 hover:text-white"
+            : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+        }`}
         title="Notifications"
       >
         <Bell className="h-5 w-5" />

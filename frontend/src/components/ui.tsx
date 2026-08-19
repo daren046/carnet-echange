@@ -12,14 +12,14 @@ export function PageHeader({
 }: {
   title: string;
   subtitle?: string;
-  accent?: "emerald" | "orange";
+  accent?: "emerald" | "orange" | "teal";
 }) {
+  const accentClass =
+    accent === "orange" ? "text-orange-600" : accent === "teal" ? "text-teal-700" : "text-emerald-700";
   return (
     <div className="mb-8">
-      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${
-        accent === "orange" ? "text-orange-600" : "text-emerald-700"
-      }`}>
-        Carnet d&apos;Échange
+      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${accentClass}`}>
+        {accent === "teal" ? "Espace vendeur" : "Perso"}
       </p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
       {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-slate-500">{subtitle}</p>}

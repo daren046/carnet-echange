@@ -11,6 +11,6 @@ public class RegisterRoleValidator implements ConstraintValidator<AllowedRegiste
         if (role == null) {
             return false;
         }
-        return role == UserRole.STUDENT || role == UserRole.PARENT;
+        return role == UserRole.STUDENT || role == UserRole.PARENT || role == UserRole.SELLER;
     }
 }

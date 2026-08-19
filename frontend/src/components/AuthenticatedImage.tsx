@@ -23,10 +23,11 @@ export function AuthenticatedImage({ src, alt, className }: Props) {
 
     const filename = src.replace(/^.*\/files\//, "");
     const base = import.meta.env.VITE_API_URL || "/api/v1";
+    const token = localStorage.getItem("accessToken");
     axios
       .get(`${base}/files/${filename}`, {
         responseType: "blob",
-        headers: { Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       .then((res) => {
         if (cancelled) return;

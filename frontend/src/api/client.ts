@@ -15,6 +15,7 @@ import type {
   UserMe,
   Zone,
   BookCondition,
+  ListingCategory,
   UserRole,
 } from "../types";
 
@@ -33,7 +34,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes("/auth/login")) {
+    const url = String(error.config?.url ?? "");
+    const publicCall =
+      url.includes("/auth/login") ||
+      url.includes("/books/deposit") ||
+      (error.config?.method === "get" &&
+        (url === "/books" || url.endsWith("/books") || url.includes("/files/")));
+    if (error.response?.status === 401 && !publicCall) {
       localStorage.removeItem("accessToken");
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
@@ -114,6 +121,7 @@ export async function searchBooks(params?: {
   libraryMode?: boolean;
   zoneId?: number;
   title?: string;
+  listingCategory?: ListingCategory;
 }) {
   const { data } = await api.get<ApiResponse<BookCopy[]>>("/books", { params });
   return data;

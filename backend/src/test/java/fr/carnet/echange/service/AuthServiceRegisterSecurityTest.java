@@ -48,4 +48,13 @@ class AuthServiceRegisterSecurityTest {
 
         authService.register(dto);
     }
+
+    @Test
+    void register_allowsSellerRole() {
+        RegisterDto dto = new RegisterDto(
+                "Test", "Vendeur", "vendeur-sec@test.fr", "secret12",
+                UserRole.SELLER, null, "NORD");
+
+        authService.register(dto);
+    }
 }

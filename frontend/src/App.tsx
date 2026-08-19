@@ -11,15 +11,33 @@ import { Catalog } from "./pages/Catalog";
 import { Deposit } from "./pages/Deposit";
 import { History } from "./pages/History";
 import { Library } from "./pages/Library";
-import { MyDeposits } from "./pages/MyDeposits";
 import { MyOrders } from "./pages/MyOrders";
 import { WalletPage } from "./pages/WalletPage";
 import { Deliveries } from "./pages/Deliveries";
 import { Profile } from "./pages/Profile";
 import { About } from "./pages/About";
-import { isDelivererOnly } from "./utils/roles";
+import { SellerHome } from "./pages/SellerHome";
+import { isDelivererOnly, isSellerOnly } from "./utils/roles";
 
 function StudentRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (isDelivererOnly(user)) return <Navigate to="/deliverer" replace />;
+  if (isSellerOnly(user)) return <Navigate to="/seller" replace />;
+  return <>{children}</>;
+}
+
+/** Dépôt public : visiteurs, élèves, parents et vendeurs */
+function DepositRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (isDelivererOnly(user)) return <Navigate to="/deliverer" replace />;
+  return <>{children}</>;
+}
+
+/** Espace vendeur : tout le monde sauf les livreurs */
+function SellerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
@@ -66,12 +84,17 @@ function AppRoutes() {
       <Route path="/deliverer" element={<DelivererRoute><DelivererHome /></DelivererRoute>} />
       <Route path="/deliveries" element={<DelivererRoute><Deliveries /></DelivererRoute>} />
 
+      {/* Espace vendeur */}
+      <Route path="/seller" element={<SellerRoute><SellerHome /></SellerRoute>} />
+
+      {/* Dépôt (élèves, parents, vendeurs) */}
+      <Route path="/deposit" element={<DepositRoute><Deposit /></DepositRoute>} />
+
       {/* Espace élèves / parents */}
       <Route path="/catalog" element={<StudentRoute><Catalog /></StudentRoute>} />
-      <Route path="/deposit" element={<StudentRoute><Deposit /></StudentRoute>} />
       <Route path="/history" element={<StudentRoute><History /></StudentRoute>} />
       <Route path="/library" element={<StudentRoute><Library /></StudentRoute>} />
-      <Route path="/my-deposits" element={<StudentRoute><MyDeposits /></StudentRoute>} />
+      <Route path="/my-deposits" element={<Navigate to="/seller" replace />} />
       <Route path="/my-orders" element={<StudentRoute><MyOrders /></StudentRoute>} />
       <Route path="/wallet" element={<StudentRoute><WalletPage /></StudentRoute>} />
     </Routes>

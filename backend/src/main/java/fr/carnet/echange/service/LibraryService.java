@@ -44,7 +44,7 @@ public class LibraryService {
     }
 
     public List<BookCopy> availableLibraryBooks() {
-        return bookCopyRepository.search(CopyStatus.AVAILABLE, null, null, true, null, null);
+        return bookCopyRepository.search(CopyStatus.AVAILABLE, null, null, true, null, null, null);
     }
 
     @Transactional
