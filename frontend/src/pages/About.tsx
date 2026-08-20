@@ -73,7 +73,7 @@ const FAQ = [
   },
   {
     q: "Pourquoi 1 000 F de livraison ?",
-    a: "Les 1 000 F paient le livreur qui ramasse et dépose dans votre zone, pour regrouper les tournées.",
+    a: "Les 1 000 F paient le livreur qui dépose dans votre zone, pour regrouper les tournées. Ils sont payables uniquement en cas de retrait d’un livre. En cas de remise, le livreur récupère gratuitement le livre et vous avez droit à un cauri.",
   },
   {
     q: "C’est quoi la bibliothèque ?",
@@ -195,6 +195,10 @@ export function About() {
                     du livre remis.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    En cas de remise, le livreur récupère gratuitement le livre et vous avez droit à un
+                    cauri.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     Vous pouvez soumettre une demande de cauris supplémentaires pour certaines catégories
                     de livres. Nos équipes vous feront un retour sous 48 h.
                   </p>
@@ -214,7 +218,8 @@ export function About() {
                     auprès de nos équipes (depuis Mon compte).
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                    La livraison, regroupée par zone à Ouagadougou, est à 1 000 F.
+                    Les 1 000 F de livraison, regroupée par zone à Ouagadougou, sont payables uniquement
+                    au retrait d’un livre.
                   </p>
                 </div>
               </div>
