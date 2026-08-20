@@ -64,12 +64,21 @@ export function Home() {
 
   const visibleBooks = books
     .filter((b) => bookMatchesCategory(b.level, b.subject, b.listingCategory, category))
-    .sort(byNewest);
+    .sort(byNewest)
+    .filter((b) => {
+      const vue = searchParams.get("vue");
+      if (vue === "offres") return b.listingKind !== "WANTED";
+      if (vue === "recherches") return b.listingKind === "WANTED";
+      return true;
+    });
 
   const handleCategoryChange = (id: CategoryId) => {
     const param = paramFromCategory(id);
-    if (param) setSearchParams({ categorie: param });
-    else setSearchParams({});
+    const vue = searchParams.get("vue");
+    const next: Record<string, string> = {};
+    if (param) next.categorie = param;
+    if (vue) next.vue = vue;
+    setSearchParams(next);
   };
 
   const bookAction = () => {
@@ -109,20 +118,56 @@ export function Home() {
         rayon="HOME"
         banner={
           <div className="border-b border-slate-200 bg-white">
-            <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
+            <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6">
+              <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <p className="text-sm text-slate-600">
                 {user
                   ? seller
-                    ? "Le catalogue public est ici. Vos annonces se gèrent dans l’espace vendeur."
-                    : "Les dernières annonces, tous produits confondus."
-                  : "Regardez les annonces sans créer de compte — à Ouaga, on commence par regarder."}
+                    ? "Le catalogue public est ici. Vos offres et recherches se gèrent dans l’espace vendeur."
+                    : "Les dernières offres et recherches, tous produits confondus."
+                  : "Rien ne se perd : donnez, échangez, vendez ou publiez ce que vous cherchez."}
               </p>
-              <Link
-                to="/deposit"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-              >
-                Déposer une annonce
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/deposit"
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+                >
+                  Déposer une offre
+                </Link>
+                <Link
+                  to="/recherche"
+                  className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
+                >
+                  Publier une recherche
+                </Link>
+              </div>
+              </div>
+              <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
+                {(
+                  [
+                    [null, "Tout"],
+                    ["offres", "Offres"],
+                    ["recherches", "Recherches"],
+                  ] as const
+                ).map(([value, label]) => {
+                  const active = (searchParams.get("vue") ?? null) === value;
+                  const params = new URLSearchParams(searchParams);
+                  if (value) params.set("vue", value);
+                  else params.delete("vue");
+                  const qs = params.toString();
+                  return (
+                    <Link
+                      key={label}
+                      to={qs ? `/?${qs}` : "/"}
+                      className={`rounded-md px-3 py-1.5 font-medium ${
+                        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
         }
@@ -148,7 +193,7 @@ export function Home() {
                   subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                 }}
-                action={bookAction()}
+                action={book.listingKind === "WANTED" ? undefined : bookAction()}
               />
             ))}
           </div>

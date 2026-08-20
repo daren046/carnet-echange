@@ -13,13 +13,15 @@ export type Subject =
   | "MEUBLES" | "LUMINAIRES" | "TEXTILE" | "VAISSELLE" | "DECORATION";
 
 export type ListingCategory = "BOOKS" | "DECOR" | "MISC";
+export type ListingKind = "OFFER" | "WANTED";
 export type OfferType = "EXCHANGE" | "DONATION" | "SALE";
 
 export type BookCondition = "NEUF" | "BON" | "MOYEN" | "ABIME";
-export type CopyStatus = "AVAILABLE" | "RESERVED" | "IN_DELIVERY" | "DELIVERED" | "LIBRARY_BORROWED";
+export type CopyStatus = "PENDING_REVIEW" | "AVAILABLE" | "RESERVED" | "IN_DELIVERY" | "DELIVERED" | "LIBRARY_BORROWED" | "REJECTED";
 export type DeliveryStatus = "PENDING" | "IN_PROGRESS" | "DELIVERED";
+export type ExtraCaurisStatus = "NONE" | "PENDING" | "APPROVED" | "REJECTED";
 export type TransactionType =
-  | "WELCOME_BONUS" | "DEPOSIT" | "PICKUP" | "PICKUP_REFUND"
+  | "WELCOME_BONUS" | "DEPOSIT" | "EXTRA_CAURIS" | "PICKUP" | "PICKUP_REFUND"
   | "DELIVERY_PAYMENT" | "DELIVERY_REFUND" | "WALLET_TOPUP"
   | "LIBRARY_DEPOSIT" | "LIBRARY_REFUND";
 
@@ -51,7 +53,10 @@ export type NotificationType =
   | "BOOK_RESERVED"
   | "BOOK_AVAILABLE"
   | "DELIVERY_STARTED"
-  | "DELIVERED";
+  | "DELIVERED"
+  | "LISTING_APPROVED"
+  | "CAURIS_CREDITED"
+  | "EXTRA_CAURIS";
 
 export interface AppNotification {
   id: number;
@@ -71,6 +76,12 @@ export interface ImpactStats {
   estimatedSavedCfa: number;
 }
 
+export interface ModerationInbox {
+  pendingListings: BookCopy[];
+  pendingCauris: BookCopy[];
+  extraCaurisRequests: BookCopy[];
+}
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -88,7 +99,7 @@ export interface BookCopy {
   subject: Subject;
   level: SchoolLevel | null;
   condition: BookCondition;
-  photoUrl: string;
+  photoUrl: string | null;
   depositorName: string;
   zoneName: string;
   status: CopyStatus;
@@ -102,6 +113,13 @@ export interface BookCopy {
   contactEmail: string | null;
   offerType: OfferType;
   expectedPrice: number | null;
+  caurisCredited: boolean;
+  extraCaurisRequested: boolean;
+  extraCaurisNote: string | null;
+  extraCaurisStatus: ExtraCaurisStatus;
+  extraCaurisAmount: number | null;
+  listingKind: ListingKind;
+  description: string | null;
 }
 
 export interface Transaction {
@@ -208,6 +226,11 @@ export const OFFER_TYPE_LABELS: Record<OfferType, string> = {
   SALE: "Vente",
 };
 
+export const LISTING_KIND_LABELS: Record<ListingKind, string> = {
+  OFFER: "Offre",
+  WANTED: "Recherche",
+};
+
 export function formatCfa(amount: number) {
   return `${amount.toLocaleString("fr-FR")} F`;
 }
@@ -219,12 +242,25 @@ export const PROVIDER_LABELS: Record<MobileMoneyProvider, string> = {
 };
 
 export const COPY_STATUS_LABELS: Record<CopyStatus, string> = {
+  PENDING_REVIEW: "En validation",
   AVAILABLE: "Disponible",
   RESERVED: "Réservé",
   IN_DELIVERY: "En livraison",
   DELIVERED: "Livré",
   LIBRARY_BORROWED: "Emprunté (biblio.)",
+  REJECTED: "Refusée",
 };
+
+export const EXTRA_CAURIS_LABELS: Record<ExtraCaurisStatus, string> = {
+  NONE: "—",
+  PENDING: "Cauris extra en attente",
+  APPROVED: "Cauris extra accordés",
+  REJECTED: "Cauris extra refusés",
+};
+
+export function formatCauris(n: number) {
+  return `${n} cauris`;
+}
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   STUDENT: "Élève",

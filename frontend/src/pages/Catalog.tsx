@@ -51,6 +51,7 @@ export function Catalog() {
         zoneId: zoneFilter !== "" ? zoneFilter : undefined,
         title: title || undefined,
         listingCategory: "BOOKS",
+        listingKind: "OFFER",
       });
       setBooks(res.data.filter((b) => bookMatchesCategory(b.level, b.subject, b.listingCategory, category)));
     } finally {
@@ -72,9 +73,13 @@ export function Catalog() {
       toast.info("Connectez-vous pour réserver un livre");
       return;
     }
+    const ok = window.confirm(
+      "Vous autorisez la déduction de 1 cauris de votre compte pour récupérer ce livre ?\n\nLa livraison (1 000 F) sera également débitée avant traitement."
+    );
+    if (!ok) return;
     try {
       await reserveBook(bookId);
-      toast.success("Réservé ! Livraison 1 000 F — regroupée par zone");
+      toast.success("Autorisation enregistrée — 1 cauris et 1 000 F débités");
       await refreshUser();
       load();
     } catch (err: unknown) {
@@ -164,7 +169,7 @@ export function Catalog() {
                 action={
                   user ? (
                     <PrimaryButton onClick={() => handleReserve(book.id)} className="w-full">
-                      Réserver (1 tampon + 1 000 F)
+                      Réserver (1 cauris + 1 000 F)
                     </PrimaryButton>
                   ) : undefined
                 }

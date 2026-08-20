@@ -41,7 +41,7 @@ public class DeliveryController {
     public ApiResponse<OrderDto> cancelOrder(Authentication authentication,
                                              @PathVariable Long reservationId) {
         User user = (User) authentication.getPrincipal();
-        return ApiResponse.ok("Réservation annulée — tampon et livraison remboursés",
+        return ApiResponse.ok("Réservation annulée — cauris et livraison remboursés",
                 deliveryService.cancelReservation(user, reservationId));
     }
 

@@ -18,6 +18,7 @@ import { Deliveries } from "./pages/Deliveries";
 import { Profile } from "./pages/Profile";
 import { About } from "./pages/About";
 import { SellerHome } from "./pages/SellerHome";
+import { Admin } from "./pages/Admin";
 import { isDelivererOnly, isSellerOnly } from "./utils/roles";
 
 function StudentRoute({ children }: { children: React.ReactNode }) {
@@ -57,6 +58,14 @@ function DelivererRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== "ADMIN") return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AuthenticatedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -82,6 +91,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/a-propos" element={<About />} />
+      <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
 
       <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
 
@@ -94,6 +104,7 @@ function AppRoutes() {
 
       {/* Dépôt (élèves, parents, vendeurs) */}
       <Route path="/deposit" element={<DepositRoute><Deposit /></DepositRoute>} />
+      <Route path="/recherche" element={<DepositRoute><Deposit /></DepositRoute>} />
 
       {/* Espace élèves / parents */}
       <Route path="/catalog" element={<StudentRoute><Catalog /></StudentRoute>} />

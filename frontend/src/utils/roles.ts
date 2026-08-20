@@ -19,6 +19,10 @@ export function isStudentAreaUser(user: UserMe | null): boolean {
   return user != null && user.role !== "DELIVERER" && user.role !== "SELLER";
 }
 
+export function isAdmin(user: UserMe | null): boolean {
+  return user?.role === "ADMIN";
+}
+
 export function homePathFor(user: UserMe | null): string {
   if (isDelivererOnly(user)) return "/deliverer";
   if (isSellerOnly(user)) return "/seller";

@@ -5,6 +5,7 @@ import fr.carnet.echange.dto.delivery.OrderDto;
 import fr.carnet.echange.entity.*;
 import fr.carnet.echange.enums.CopyStatus;
 import fr.carnet.echange.enums.DeliveryStatus;
+import fr.carnet.echange.enums.ListingKind;
 import fr.carnet.echange.enums.NotificationType;
 import fr.carnet.echange.enums.TransactionType;
 import fr.carnet.echange.enums.UserRole;
@@ -53,8 +54,11 @@ public class DeliveryService {
         if (copy.isLibraryMode()) {
             throw new IllegalStateException("Ce livre est en mode bibliothèque — utilisez l'emprunt");
         }
+        if (copy.getListingKind() == ListingKind.WANTED) {
+            throw new IllegalStateException("Ceci est une recherche, pas une offre. Contactez la personne qui cherche cet article.");
+        }
         if (user.getStampBalance() < 1) {
-            throw new IllegalStateException("Solde de tampons insuffisant");
+            throw new IllegalStateException("Solde de cauris insuffisant");
         }
         if (user.getWalletBalance() < deliveryFee) {
             throw new IllegalStateException("Solde Mobile Money insuffisant pour la livraison ("

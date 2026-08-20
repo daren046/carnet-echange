@@ -132,7 +132,7 @@ export function Profile() {
           {!isDelivererOnly(user) && (
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-slate-500">Tampons</dt>
+                <dt className="text-slate-500">Cauris</dt>
                 <dd className="font-semibold text-emerald-800">{user?.stampBalance ?? 0}</dd>
               </div>
               <div className="flex justify-between">

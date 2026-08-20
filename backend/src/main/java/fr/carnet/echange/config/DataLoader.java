@@ -13,7 +13,9 @@ import fr.carnet.echange.repository.NotificationRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
 import fr.carnet.echange.entity.Notification;
+import fr.carnet.echange.enums.ExtraCaurisStatus;
 import fr.carnet.echange.enums.ListingCategory;
+import fr.carnet.echange.enums.ListingKind;
 import fr.carnet.echange.enums.NotificationType;
 import fr.carnet.echange.enums.OfferType;
 import org.springframework.boot.CommandLineRunner;
@@ -51,6 +53,8 @@ public class DataLoader implements CommandLineRunner {
         seedDemoNotifications();
         migrateListingCategory();
         migrateOfferType();
+        migrateCaurisFlags();
+        migrateListingKind();
     }
 
     private void seedZones() {
@@ -327,7 +331,7 @@ public class DataLoader implements CommandLineRunner {
         if (demo != null) {
             notificationRepository.save(new Notification(demo, NotificationType.WELCOME,
                     "Bienvenue Marie",
-                    "Vous avez 1 tampon et 10 000 F. Explorez le catalogue ou déposez un manuel.",
+                    "Vous avez 1 cauris et 10 000 F. Explorez le catalogue ou déposez un manuel.",
                     "/catalog"));
         }
         if (livreur != null) {
@@ -357,12 +361,36 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
+    private void migrateListingKind() {
+        for (BookCopy copy : bookCopyRepository.findByListingKindIsNull()) {
+            copy.setListingKind(ListingKind.OFFER);
+            bookCopyRepository.save(copy);
+        }
+    }
+
+    private void migrateCaurisFlags() {
+        for (BookCopy copy : bookCopyRepository.findByExtraCaurisStatusIsNull()) {
+            copy.setExtraCaurisStatus(ExtraCaurisStatus.NONE);
+            boolean eligible = !copy.isLibraryMode()
+                    && copy.getListingCategory() == ListingCategory.BOOKS
+                    && copy.getDepositor() != null
+                    && !"anonyme@perso.local".equalsIgnoreCase(copy.getDepositor().getEmail());
+            copy.setCaurisCredited(eligible);
+            bookCopyRepository.save(copy);
+        }
+    }
+
     private BookCopy saveBook(String title, Subject subject, SchoolLevel level, BookCondition condition,
                               String photoUrl, User depositor, Zone zone, boolean libraryMode,
                               OfferType offerType, Integer expectedPrice) {
         BookCopy copy = new BookCopy(title, subject, level, condition, photoUrl, depositor, zone, libraryMode);
         copy.setOfferType(offerType != null ? offerType : OfferType.EXCHANGE);
         copy.setExpectedPrice(offerType == OfferType.SALE ? expectedPrice : null);
+        copy.setExtraCaurisStatus(ExtraCaurisStatus.NONE);
+        boolean eligible = !libraryMode
+                && depositor != null
+                && !"anonyme@perso.local".equalsIgnoreCase(depositor.getEmail());
+        copy.setCaurisCredited(eligible);
         return bookCopyRepository.save(copy);
     }
 

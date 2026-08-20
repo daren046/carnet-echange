@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Package, ShoppingBag, Store, Truck } from "lucide-react";
-import { getMyDeposits } from "../api/client";
+import { getMyDeposits, requestExtraCauris } from "../api/client";
 import { AuthenticatedImage } from "../components/AuthenticatedImage";
 import { Layout } from "../components/Layout";
 import { Badge, EmptyState, LoadingState, PageHeader, PrimaryButton } from "../components/ui";
@@ -10,6 +11,7 @@ import { levelCategoryLabel, listingSubjectLabel } from "../components/BrowseShe
 import {
   CONDITION_LABELS,
   COPY_STATUS_LABELS,
+  EXTRA_CAURIS_LABELS,
   formatCfa,
   OFFER_TYPE_LABELS,
   type BookCopy,
@@ -23,10 +25,12 @@ const SALE_STATUSES: CopyStatus[] = ["RESERVED", "IN_DELIVERY", "DELIVERED"];
 
 function statusTone(status: CopyStatus) {
   if (status === "AVAILABLE") return "green" as const;
+  if (status === "PENDING_REVIEW") return "amber" as const;
   if (status === "RESERVED") return "amber" as const;
   if (status === "IN_DELIVERY") return "blue" as const;
   if (status === "DELIVERED") return "emerald" as const;
   if (status === "LIBRARY_BORROWED") return "violet" as const;
+  if (status === "REJECTED") return "orange" as const;
   return "slate" as const;
 }
 
@@ -36,14 +40,37 @@ export function SellerHome() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("listings");
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     getMyDeposits()
       .then((res) => setBooks(res.data))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
+  const handleExtra = async (book: BookCopy) => {
+    const note = window.prompt(
+      "Pourquoi ce livre justifie-t-il des cauris supplémentaires ? L’équipe répond sous 48 h."
+    );
+    if (note == null) return;
+    if (note.trim().length < 8) {
+      toast.error("Précisez un peu plus votre demande");
+      return;
+    }
+    try {
+      await requestExtraCauris(book.id, note.trim());
+      toast.success("Demande transmise — retour sous 48 h");
+      load();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || "Demande impossible");
+    }
+  };
   const listings = useMemo(
-    () => books.filter((b) => b.status === "AVAILABLE" || b.status === "LIBRARY_BORROWED"),
+    () => books.filter((b) => b.status === "AVAILABLE" || b.status === "LIBRARY_BORROWED" || b.status === "PENDING_REVIEW" || b.status === "REJECTED"),
     [books]
   );
   const sales = useMemo(
@@ -68,9 +95,17 @@ export function SellerHome() {
           subtitle="Ici, uniquement vos annonces et vos ventes — le catalogue public reste sur l’accueil."
           accent={isSellerOnly(user) ? "teal" : "emerald"}
         />
-        <Link to="/deposit" className="mb-8 shrink-0">
-          <PrimaryButton className="w-full sm:w-auto">Déposer une annonce</PrimaryButton>
-        </Link>
+        <div className="mb-8 flex shrink-0 flex-wrap gap-2">
+          <Link to="/deposit">
+            <PrimaryButton className="w-full sm:w-auto">Déposer une offre</PrimaryButton>
+          </Link>
+          <Link
+            to="/recherche"
+            className="inline-flex items-center justify-center rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-900 hover:bg-sky-100"
+          >
+            Publier une recherche
+          </Link>
+        </div>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -127,6 +162,7 @@ export function SellerHome() {
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
                   <div className="mt-2 flex flex-wrap gap-1.5">
+                    {book.listingKind === "WANTED" && <Badge tone="blue">Recherche</Badge>}
                     {book.listingCategory === "BOOKS" && levelCategoryLabel(book.level) && (
                       <Badge tone="emerald">{levelCategoryLabel(book.level)}</Badge>
                     )}
@@ -136,8 +172,8 @@ export function SellerHome() {
                     {listingSubjectLabel(book.listingCategory, book.subject) && (
                       <Badge>{listingSubjectLabel(book.listingCategory, book.subject)}</Badge>
                     )}
-                    <Badge>{CONDITION_LABELS[book.condition]}</Badge>
-                    {!book.libraryMode && (
+                    {book.listingKind !== "WANTED" && <Badge>{CONDITION_LABELS[book.condition]}</Badge>}
+                    {!book.libraryMode && book.listingKind !== "WANTED" && (
                       <Badge
                         tone={
                           book.offerType === "DONATION"
@@ -151,6 +187,14 @@ export function SellerHome() {
                       </Badge>
                     )}
                     {book.anonymous && <Badge>Anonyme</Badge>}
+                    {book.listingCategory === "BOOKS" && !book.libraryMode && book.listingKind !== "WANTED" && !book.caurisCredited && (
+                      <Badge tone="amber">Cauris en attente</Badge>
+                    )}
+                    {book.extraCaurisStatus && book.extraCaurisStatus !== "NONE" && (
+                      <Badge tone={book.extraCaurisStatus === "APPROVED" ? "emerald" : "amber"}>
+                        {EXTRA_CAURIS_LABELS[book.extraCaurisStatus]}
+                      </Badge>
+                    )}
                   </div>
                   {book.offerType === "SALE" && book.expectedPrice != null && book.listingCategory !== "BOOKS" && (
                     <p className="mt-2 text-sm font-medium text-amber-800">
@@ -167,6 +211,17 @@ export function SellerHome() {
                     {tab === "sales" ? "Mouvement du" : "Déposé le"}{" "}
                     {new Date(book.createdAt).toLocaleDateString("fr-FR")}
                   </p>
+                  {tab === "listings" && book.listingCategory === "BOOKS" && !book.libraryMode
+                    && book.listingKind !== "WANTED"
+                    && (book.extraCaurisStatus === "NONE" || book.extraCaurisStatus === "REJECTED") && (
+                    <button
+                      type="button"
+                      onClick={() => handleExtra(book)}
+                      className="mt-3 text-xs font-medium text-amber-800 hover:underline"
+                    >
+                      Demander des cauris supplémentaires
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

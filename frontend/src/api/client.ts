@@ -16,7 +16,9 @@ import type {
   Zone,
   BookCondition,
   ListingCategory,
+  ListingKind,
   UserRole,
+  ModerationInbox,
 } from "../types";
 
 const api = axios.create({
@@ -122,6 +124,7 @@ export async function searchBooks(params?: {
   zoneId?: number;
   title?: string;
   listingCategory?: ListingCategory;
+  listingKind?: ListingKind;
 }) {
   const { data } = await api.get<ApiResponse<BookCopy[]>>("/books", { params });
   return data;
@@ -136,6 +139,39 @@ export async function depositBook(form: FormData) {
 
 export async function getMyDeposits() {
   const { data } = await api.get<ApiResponse<BookCopy[]>>("/books/mine");
+  return data;
+}
+
+export async function requestExtraCauris(bookCopyId: number, note: string) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/books/${bookCopyId}/extra-cauris`, { note });
+  return data;
+}
+
+export async function getModerationInbox() {
+  const { data } = await api.get<ApiResponse<ModerationInbox>>("/admin/moderation");
+  return data;
+}
+
+export async function approveListing(id: number) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/listings/${id}/approve`);
+  return data;
+}
+
+export async function rejectListing(id: number) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/listings/${id}/reject`);
+  return data;
+}
+
+export async function creditCauris(id: number) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/credit-cauris`);
+  return data;
+}
+
+export async function decideExtraCauris(id: number, approved: boolean, amount?: number) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/extra-cauris`, {
+    approved,
+    amount: amount ?? null,
+  });
   return data;
 }
 

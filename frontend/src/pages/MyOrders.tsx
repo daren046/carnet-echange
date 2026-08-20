@@ -31,10 +31,10 @@ export function MyOrders() {
   }, []);
 
   const handleCancel = async (reservationId: number) => {
-    if (!confirm("Annuler cette réservation ? Le tampon et les frais de livraison seront remboursés.")) return;
+    if (!confirm("Annuler cette réservation ? Le cauris et les frais de livraison seront remboursés.")) return;
     try {
       await cancelOrder(reservationId);
-      toast.success("Réservation annulée — tampon et livraison remboursés");
+      toast.success("Réservation annulée — cauris et livraison remboursés");
       await refreshUser();
       load();
     } catch (err: unknown) {

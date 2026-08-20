@@ -12,6 +12,7 @@ import {
   Package,
   PlusCircle,
   Search,
+  ShieldCheck,
   ShoppingBag,
   Store,
   Ticket,
@@ -23,13 +24,14 @@ import { toast } from "react-toastify";
 import { AuthenticatedImage } from "./AuthenticatedImage";
 import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../context/AuthContext";
-import { homePathFor, isDelivererOnly, isSellerOnly } from "../utils/roles";
-import { formatCfa, OFFER_TYPE_LABELS, type OfferType } from "../types";
+import { homePathFor, isAdmin, isDelivererOnly, isSellerOnly } from "../utils/roles";
+import { formatCfa, LISTING_KIND_LABELS, OFFER_TYPE_LABELS, type ListingKind, type OfferType } from "../types";
 
 const primaryNav = [
   { to: "/", label: "Accueil", icon: Home },
   { to: "/annonces", label: "Catalogue", icon: BookOpen },
-  { to: "/deposit", label: "Déposer", icon: PlusCircle },
+  { to: "/deposit", label: "Offre", icon: PlusCircle },
+  { to: "/recherche", label: "Recherche", icon: Search },
   { to: "/library", label: "Bibliothèque", icon: Library },
 ];
 
@@ -38,7 +40,9 @@ const publicBarNav = [
   { to: "/livres", label: "Livres" },
   { to: "/?categorie=deco", label: "Intérieur Déco" },
   { to: "/?categorie=divers", label: "Articles divers" },
-  { to: "/deposit", label: "Déposer une annonce" },
+  { to: "/deposit", label: "Déposer une offre" },
+  { to: "/recherche", label: "Publier une recherche" },
+  { to: "/a-propos", label: "À propos" },
   { to: "/annonces", label: "Voir toutes les annonces" },
 ];
 
@@ -48,13 +52,15 @@ const accountNav = [
   { to: "/my-orders", label: "Commandes", icon: ShoppingBag },
   { to: "/wallet", label: "Mobile Money", icon: Wallet },
   { to: "/history", label: "Historique", icon: History },
-  { to: "/a-propos", label: "Impact & FAQ", icon: HelpCircle },
+  { to: "/admin", label: "Espace équipe", icon: ShieldCheck },
+  { to: "/a-propos", label: "À propos", icon: HelpCircle },
 ];
 
 const sellerNavItems = [
   { to: "/", label: "Accueil", icon: Home },
   { to: "/seller", label: "Mes ventes", icon: Store },
   { to: "/deposit", label: "Déposer", icon: PlusCircle },
+  { to: "/recherche", label: "Recherche", icon: Search },
   { to: "/profile", label: "Mon compte", icon: CircleUser },
 ];
 
@@ -91,12 +97,13 @@ export function Navbar() {
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const accountActive = accountNav.some((item) => location.pathname === item.to);
+  const visibleAccountNav = accountNav.filter((item) => item.to !== "/admin" || isAdmin(user));
+  const accountActive = visibleAccountNav.some((item) => location.pathname === item.to);
   const mobileNav = delivererMode
     ? delivererNavItems
     : sellerMode
       ? sellerNavItems
-      : [...primaryNav, ...accountNav];
+      : [...primaryNav, ...visibleAccountNav];
 
   useEffect(() => {
     setAccountOpen(false);
@@ -219,7 +226,7 @@ export function Navbar() {
             {user ? (
               <>
                 <div className="hidden items-center gap-2 md:flex">
-                  <span className="inline-flex items-center gap-1 rounded-sm bg-white/10 px-2 py-1 text-[11px] font-medium">
+                  <span className="inline-flex items-center gap-1 rounded-sm bg-white/10 px-2 py-1 text-[11px] font-medium" title="Cauris">
                     <Ticket className="h-3 w-3" />
                     {user.stampBalance}
                   </span>
@@ -240,7 +247,7 @@ export function Navbar() {
                     </button>
                     {accountOpen && (
                       <div className="absolute right-0 top-full z-50 mt-1 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-slate-700 shadow-lg">
-                        {accountNav.map(({ to, label, icon: Icon }) => (
+                        {visibleAccountNav.map(({ to, label, icon: Icon }) => (
                           <Link
                             key={to}
                             to={to}
@@ -380,7 +387,7 @@ export function BookCard({
   book: {
     id: number;
     title: string;
-    photoUrl: string;
+    photoUrl: string | null;
     subject: string;
     level?: string | null;
     condition: string;
@@ -392,6 +399,8 @@ export function BookCard({
     contactPhone?: string | null;
     offerType?: OfferType | string | null;
     expectedPrice?: number | null;
+    listingKind?: ListingKind | string | null;
+    description?: string | null;
   };
   action?: React.ReactNode;
   size?: "default" | "gallery";
@@ -402,27 +411,45 @@ export function BookCard({
   if (whatsappDigits.length === 8) {
     whatsappDigits = `226${whatsappDigits}`;
   }
+  const wanted = book.listingKind === "WANTED";
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className={`overflow-hidden bg-slate-100 ${gallery ? "aspect-[16/10]" : "aspect-[4/3]"}`}>
-        <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
+        {book.photoUrl ? (
+          <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-sky-50 text-sky-800">
+            <Search className="h-8 w-8" />
+            <span className="text-xs font-semibold uppercase tracking-wide">Recherche</span>
+          </div>
+        )}
       </div>
       <div className={gallery ? "p-5" : "p-4"}>
         <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
+        {book.description && (
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-500 line-clamp-3">{book.description}</p>
+        )}
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+          {wanted && (
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 font-medium text-sky-800">
+              {LISTING_KIND_LABELS.WANTED}
+            </span>
+          )}
           {book.level && (
             <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-700">{book.level}</span>
           )}
           {book.subject && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">{book.subject}</span>
           )}
-          <span className="rounded-full bg-slate-50 px-2 py-0.5 text-slate-500">{book.condition}</span>
+          {!wanted && (
+            <span className="rounded-full bg-slate-50 px-2 py-0.5 text-slate-500">{book.condition}</span>
+          )}
           {book.libraryMode && (
             <span className="rounded-full bg-violet-50 px-2 py-0.5 text-violet-700">
               <Package className="inline h-3 w-3" /> Bibliothèque
             </span>
           )}
-          {book.offerType && !book.libraryMode && (
+          {book.offerType && !book.libraryMode && !wanted && (
             <span
               className={`rounded-full px-2 py-0.5 font-medium ${
                 book.offerType === "DONATION"

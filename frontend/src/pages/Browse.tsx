@@ -64,9 +64,13 @@ export function Browse() {
     };
   }, [title, rayon]);
 
-  const visibleBooks = books.filter((b) =>
-    bookMatchesCategory(b.level, b.subject, b.listingCategory, category)
-  );
+  const visibleBooks = books.filter((b) => {
+    if (!bookMatchesCategory(b.level, b.subject, b.listingCategory, category)) return false;
+    const vue = searchParams.get("vue");
+    if (vue === "offres") return b.listingKind !== "WANTED";
+    if (vue === "recherches") return b.listingKind === "WANTED";
+    return true;
+  });
   const seller = isSellerOnly(user);
 
   const bookAction = () => {
@@ -116,12 +120,20 @@ export function Browse() {
                     ? "Livres, intérieur déco et articles divers."
                     : "Manuels scolaires, du primaire à l’université."}
               </p>
-              <Link
-                to="/deposit"
-                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-              >
-                Déposer une annonce
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/deposit"
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+                >
+                  Déposer une offre
+                </Link>
+                <Link
+                  to="/recherche"
+                  className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
+                >
+                  Publier une recherche
+                </Link>
+              </div>
             </div>
           </div>
         }
@@ -151,7 +163,7 @@ export function Browse() {
                   subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                 }}
-                action={bookAction()}
+                action={book.listingKind === "WANTED" ? undefined : bookAction()}
               />
             ))}
           </div>

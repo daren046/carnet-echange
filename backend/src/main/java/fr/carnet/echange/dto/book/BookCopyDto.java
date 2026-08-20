@@ -2,7 +2,9 @@ package fr.carnet.echange.dto.book;
 
 import fr.carnet.echange.enums.BookCondition;
 import fr.carnet.echange.enums.CopyStatus;
+import fr.carnet.echange.enums.ExtraCaurisStatus;
 import fr.carnet.echange.enums.ListingCategory;
+import fr.carnet.echange.enums.ListingKind;
 import fr.carnet.echange.enums.OfferType;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
@@ -28,5 +30,12 @@ public record BookCopyDto(
         String contactPhone,
         String contactEmail,
         OfferType offerType,
-        Integer expectedPrice
+        Integer expectedPrice,
+        boolean caurisCredited,
+        boolean extraCaurisRequested,
+        String extraCaurisNote,
+        ExtraCaurisStatus extraCaurisStatus,
+        Integer extraCaurisAmount,
+        ListingKind listingKind,
+        String description
 ) {}

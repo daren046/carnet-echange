@@ -5,5 +5,8 @@ public enum NotificationType {
     BOOK_RESERVED,
     BOOK_AVAILABLE,
     DELIVERY_STARTED,
-    DELIVERED
+    DELIVERED,
+    LISTING_APPROVED,
+    CAURIS_CREDITED,
+    EXTRA_CAURIS
 }

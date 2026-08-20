@@ -25,7 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<UserMeDto> register(@Valid @RequestBody RegisterDto dto) {
         User user = authService.register(dto);
-        return ApiResponse.ok("Inscription réussie — 1 tampon de bienvenue offert !",
+        return ApiResponse.ok("Inscription réussie — 1 cauris de bienvenue offert !",
                 authService.toUserMeDto(user));
     }
 

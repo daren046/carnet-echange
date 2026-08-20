@@ -1,5 +1,5 @@
 import { FormEvent, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { depositBook } from "../api/client";
@@ -30,8 +30,10 @@ function defaultCategory(listingCategory: ListingCategory): string {
 export function Deposit() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const seller = isSellerOnly(user);
+  const wanted = location.pathname === "/recherche";
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,9 @@ export function Deposit() {
     condition: "BON" as BookCondition,
     offerType: "EXCHANGE" as OfferType,
     expectedPrice: "",
+    extraCaurisRequested: false,
+    extraCaurisNote: "",
+    description: "",
     libraryMode: false,
     anonymous: !user,
     quartier: user?.zoneName ?? "",
@@ -70,12 +75,20 @@ export function Deposit() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
-    if (!file) {
+    if (!wanted && !file) {
       toast.error("La photo est obligatoire");
       return;
     }
     if (!form.quartier.trim()) {
       toast.error("Indiquez votre quartier");
+      return;
+    }
+    if (wanted && form.description.trim().length < 10) {
+      toast.error("Décrivez un peu l’article que vous cherchez");
+      return;
+    }
+    if (wanted && !form.contactPhone.replace(/[^0-9+]/g, "").match(/^\+?[0-9]{8,15}$/)) {
+      toast.error("Indiquez un numéro pour que l’on puisse vous proposer l’article");
       return;
     }
     if (!user && !form.anonymous) {
@@ -95,16 +108,26 @@ export function Deposit() {
       toast.error("Indiquez le prix attendu pour une vente");
       return;
     }
+    if (user && !wanted && form.listingCategory === "BOOKS" && !library && form.extraCaurisRequested && form.extraCaurisNote.trim().length < 8) {
+      toast.error("Précisez pourquoi ce livre justifie des cauris supplémentaires");
+      return;
+    }
 
     const data = new FormData();
     data.append("title", form.title);
     data.append("listingCategory", form.listingCategory);
     data.append("condition", form.condition);
-    data.append("libraryMode", String(library));
+    data.append("libraryMode", String(library && !wanted));
     data.append("anonymous", String(form.anonymous));
     data.append("quartier", form.quartier.trim());
-    data.append("photo", file);
-    if (!library) {
+    data.append("listingKind", wanted ? "WANTED" : "OFFER");
+    if (form.description.trim()) {
+      data.append("description", form.description.trim());
+    }
+    if (file) {
+      data.append("photo", file);
+    }
+    if (!library && !wanted) {
       data.append("offerType", form.offerType);
       if (pricedSale) {
         data.append("expectedPrice", String(price));
@@ -120,7 +143,12 @@ export function Deposit() {
       data.append("subject", "AUTRE");
     }
 
-    if (!user) {
+    if (user && !wanted && form.listingCategory === "BOOKS" && !library && form.extraCaurisRequested) {
+      data.append("extraCaurisRequested", "true");
+      data.append("extraCaurisNote", form.extraCaurisNote.trim());
+    }
+
+    if (!user || wanted) {
       if (form.contactName.trim()) {
         data.append("contactName", form.contactName.trim());
       }
@@ -141,6 +169,9 @@ export function Deposit() {
         title: "",
         offerType: "EXCHANGE",
         expectedPrice: "",
+        extraCaurisRequested: false,
+        extraCaurisNote: "",
+        description: "",
         libraryMode: false,
         anonymous: !user,
         contactName: "",
@@ -153,7 +184,7 @@ export function Deposit() {
       if (seller || user) {
         navigate("/seller");
       } else {
-        navigate(form.listingCategory === "DECOR" ? "/deco" : form.listingCategory === "MISC" ? "/divers" : "/livres");
+        navigate("/a-propos");
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -166,14 +197,36 @@ export function Deposit() {
   return (
     <Layout>
       <PageHeader
-        title="Déposer une annonce"
+        title={wanted ? "Publier une recherche" : "Déposer une offre"}
         subtitle={
-          user
-            ? "Livres, intérieur déco ou articles divers. Vous pouvez masquer votre nom."
-            : "Publiez sans créer de compte : laissez un numéro pour être contacté directement."
+          wanted
+            ? user
+              ? "Dites ce que vous cherchez : un membre qui l’a pourra vous contacter."
+              : "Sans compte, la recherche est relue par l’équipe. Laissez un numéro pour qu’on vous propose l’article."
+            : user
+              ? "Livres, intérieur déco ou articles divers. Un livre déposé ouvre droit à 1 cauris après validation de l’état."
+              : "Sans compte, votre offre est relue par l’équipe avant d’apparaître. Laissez un numéro pour être contacté."
         }
         accent={seller ? "teal" : "emerald"}
       />
+      <div className="mb-4 flex max-w-lg gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+        <Link
+          to="/deposit"
+          className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium ${
+            !wanted ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          J’ai un article
+        </Link>
+        <Link
+          to="/recherche"
+          className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium ${
+            wanted ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Je cherche un article
+        </Link>
+      </div>
       <Card className="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -215,7 +268,9 @@ export function Deposit() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Photo *</label>
+            <label className="block text-sm font-medium text-slate-700">
+              {wanted ? "Photo (optionnelle)" : "Photo *"}
+            </label>
             <div
               onClick={() => fileRef.current?.click()}
               className="mt-2 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-10 hover:border-emerald-400"
@@ -225,14 +280,16 @@ export function Deposit() {
               ) : (
                 <>
                   <Camera className="h-10 w-10 text-slate-300" />
-                  <p className="mt-2 text-sm text-slate-400">Cliquez pour ajouter une photo</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {wanted ? "Une image d’exemple, si vous en avez une" : "Cliquez pour ajouter une photo"}
+                  </p>
                 </>
               )}
             </div>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => handlePhoto(e.target.files?.[0])} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">Titre</label>
+            <label className="block text-sm font-medium text-slate-700">{wanted ? "Vous cherchez" : "Titre"}</label>
             <input
               required
               value={form.title}
@@ -240,10 +297,10 @@ export function Deposit() {
               className={inputClass}
               placeholder={
                 form.listingCategory === "DECOR"
-                  ? "Ex. Canapé 3 places"
+                  ? wanted ? "Ex. Canapé 3 places en tissu" : "Ex. Canapé 3 places"
                   : form.listingCategory === "MISC"
-                    ? "Ex. Cartable, vélo enfant"
-                    : "Ex. Transmath 6ème"
+                    ? wanted ? "Ex. Cartable CE2" : "Ex. Cartable, vélo enfant"
+                    : wanted ? "Ex. Transmath 6ème — édition récente" : "Ex. Transmath 6ème"
               }
             />
           </div>
@@ -265,6 +322,23 @@ export function Deposit() {
               </select>
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700">{wanted ? "Précisions *" : "Description"}</label>
+            <textarea
+              required={wanted}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className={inputClass}
+              rows={wanted ? 4 : 3}
+              placeholder={
+                wanted
+                  ? "Niveau, édition, état souhaité, ce dont vous avez besoin…"
+                  : "Quelques mots pour décrire l’article (optionnel)"
+              }
+            />
+          </div>
+          {!wanted && (
+            <>
           <div>
             <label className="block text-sm font-medium text-slate-700">État</label>
             <select
@@ -320,10 +394,12 @@ export function Deposit() {
               )}
               {form.offerType === "SALE" && form.listingCategory === "BOOKS" && (
                 <p className="mt-2 text-xs text-slate-400">
-                  Les manuels n’ont pas de prix : l’échange se fait par tampons ou directement entre vous.
+                  Les manuels n’ont pas de prix : l’échange se fait par cauris ou directement entre vous.
                 </p>
               )}
             </div>
+          )}
+            </>
           )}
           <div>
             <label className="block text-sm font-medium text-slate-700">Quartier</label>
@@ -373,14 +449,35 @@ export function Deposit() {
               </div>
             </div>
           )}
+          {wanted && user && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Téléphone *</label>
+              <input
+                required
+                type="tel"
+                value={form.contactPhone}
+                onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+                className={inputClass}
+                placeholder="Ex. 70 00 00 00"
+              />
+              <p className="mt-1.5 text-xs text-slate-400">
+                Visible sur la recherche, pour qu’on puisse vous proposer l’article.
+              </p>
+            </div>
+          )}
           {!user && form.anonymous && (
             <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm text-slate-600">
-                L’annonce s’affiche comme « Anonyme ». Vous pouvez laisser un numéro pour l’équipe seulement.
+                {wanted
+                  ? "La recherche s’affiche comme « Anonyme ». Laissez un numéro pour qu’on puisse vous proposer l’article."
+                  : "L’offre s’affiche comme « Anonyme ». Vous pouvez laisser un numéro pour l’équipe seulement."}
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Téléphone (optionnel, non affiché)</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  {wanted ? "Téléphone *" : "Téléphone (optionnel, non affiché)"}
+                </label>
                 <input
+                  required={wanted}
                   type="tel"
                   value={form.contactPhone}
                   onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
@@ -390,7 +487,7 @@ export function Deposit() {
               </div>
             </div>
           )}
-          {user && form.listingCategory === "BOOKS" && !seller && (
+          {user && !wanted && form.listingCategory === "BOOKS" && !seller && (
             <label className="flex items-start gap-2 text-sm text-slate-600">
               <input
                 type="checkbox"
@@ -398,8 +495,36 @@ export function Deposit() {
                 onChange={(e) => setForm({ ...form, libraryMode: e.target.checked })}
                 className="mt-0.5 rounded border-slate-300 text-emerald-600"
               />
-              Déposer en mode bibliothèque (emprunt avec caution, pas de tampon)
+              Déposer en mode bibliothèque (emprunt avec caution, pas de cauris)
             </label>
+          )}
+          {user && !wanted && form.listingCategory === "BOOKS" && !form.libraryMode && (
+            <div className="space-y-2 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+              <label className="flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={form.extraCaurisRequested}
+                  onChange={(e) => setForm({ ...form, extraCaurisRequested: e.target.checked })}
+                  className="mt-0.5 rounded border-slate-300 text-amber-600"
+                />
+                Demander des cauris supplémentaires pour ce livre
+              </label>
+              {form.extraCaurisRequested && (
+                <>
+                  <textarea
+                    required
+                    value={form.extraCaurisNote}
+                    onChange={(e) => setForm({ ...form, extraCaurisNote: e.target.value })}
+                    className={inputClass}
+                    rows={3}
+                    placeholder="Précisez la catégorie ou l’intérêt particulier du livre…"
+                  />
+                  <p className="text-xs text-slate-500">
+                    Nos équipes vous feront un retour sous 48 h, après validation de l’état.
+                  </p>
+                </>
+              )}
+            </div>
           )}
           <label className="flex items-start gap-2 text-sm text-slate-600">
             <input
@@ -412,15 +537,22 @@ export function Deposit() {
           </label>
           {!user && (
             <p className="text-xs text-slate-400">
+              Sans compte, {wanted ? "la recherche" : "l’offre"} est soumise à validation.{" "}
               {form.anonymous
-                ? "Sans compte, l’annonce reste anonyme. "
-                : "Votre nom et votre téléphone seront visibles sur l’annonce. "}
+                ? "Elle restera anonyme. "
+                : "Votre nom et votre téléphone seront visibles une fois publiée. "}
               <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
-              {" "}si vous voulez suivre vos ventes.
+              {wanted ? " pour publier immédiatement." : " pour publier immédiatement et obtenir des cauris."}
             </p>
           )}
           <PrimaryButton type="submit" disabled={loading} className="w-full py-3">
-            {loading ? "Publication..." : "Publier l’annonce"}
+            {loading
+              ? "Envoi..."
+              : user
+                ? wanted
+                  ? "Publier la recherche"
+                  : "Publier l’offre"
+                : "Soumettre pour validation"}
           </PrimaryButton>
         </form>
       </Card>

@@ -2,7 +2,9 @@ package fr.carnet.echange.entity;
 
 import fr.carnet.echange.enums.BookCondition;
 import fr.carnet.echange.enums.CopyStatus;
+import fr.carnet.echange.enums.ExtraCaurisStatus;
 import fr.carnet.echange.enums.ListingCategory;
+import fr.carnet.echange.enums.ListingKind;
 import fr.carnet.echange.enums.OfferType;
 import fr.carnet.echange.enums.SchoolLevel;
 import fr.carnet.echange.enums.Subject;
@@ -32,7 +34,7 @@ public class BookCopy {
     @Column(nullable = false)
     private BookCondition condition;
 
-    @Column(nullable = false)
+    @Column
     private String photoUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -70,6 +72,29 @@ public class BookCopy {
     /** Prix attendu (FCFA) pour une vente — interne, non affiché au public. */
     private Integer expectedPrice;
 
+    /** True une fois le cauris de dépôt crédité après validation de l’état. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean caurisCredited = false;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean extraCaurisRequested = false;
+
+    @Column(length = 500)
+    private String extraCaurisNote;
+
+    /** Null = anciens enregistrements, traités comme NONE. */
+    @Enumerated(EnumType.STRING)
+    private ExtraCaurisStatus extraCaurisStatus = ExtraCaurisStatus.NONE;
+
+    private Integer extraCaurisAmount;
+
+    /** OFFER = je propose un article. WANTED = je cherche un article. Null = anciens enregistrements traités comme OFFER. */
+    @Enumerated(EnumType.STRING)
+    private ListingKind listingKind = ListingKind.OFFER;
+
+    @Column(length = 1000)
+    private String description;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private User reservedBy;
 
@@ -91,6 +116,8 @@ public class BookCopy {
         this.listingCategory = ListingCategory.BOOKS;
         this.anonymous = false;
         this.offerType = OfferType.EXCHANGE;
+        this.listingKind = ListingKind.OFFER;
+        this.extraCaurisStatus = ExtraCaurisStatus.NONE;
     }
 
     public Long getId() { return id; }
@@ -114,6 +141,17 @@ public class BookCopy {
         return offerType != null ? offerType : OfferType.EXCHANGE;
     }
     public Integer getExpectedPrice() { return expectedPrice; }
+    public boolean isCaurisCredited() { return caurisCredited; }
+    public boolean isExtraCaurisRequested() { return extraCaurisRequested; }
+    public String getExtraCaurisNote() { return extraCaurisNote; }
+    public ExtraCaurisStatus getExtraCaurisStatus() {
+        return extraCaurisStatus != null ? extraCaurisStatus : ExtraCaurisStatus.NONE;
+    }
+    public Integer getExtraCaurisAmount() { return extraCaurisAmount; }
+    public ListingKind getListingKind() {
+        return listingKind != null ? listingKind : ListingKind.OFFER;
+    }
+    public String getDescription() { return description; }
     public User getReservedBy() { return reservedBy; }
     public Instant getCreatedAt() { return createdAt; }
 
@@ -127,4 +165,11 @@ public class BookCopy {
     public void setContactEmail(String contactEmail) { this.contactEmail = contactEmail; }
     public void setOfferType(OfferType offerType) { this.offerType = offerType; }
     public void setExpectedPrice(Integer expectedPrice) { this.expectedPrice = expectedPrice; }
+    public void setCaurisCredited(boolean caurisCredited) { this.caurisCredited = caurisCredited; }
+    public void setExtraCaurisRequested(boolean extraCaurisRequested) { this.extraCaurisRequested = extraCaurisRequested; }
+    public void setExtraCaurisNote(String extraCaurisNote) { this.extraCaurisNote = extraCaurisNote; }
+    public void setExtraCaurisStatus(ExtraCaurisStatus extraCaurisStatus) { this.extraCaurisStatus = extraCaurisStatus; }
+    public void setExtraCaurisAmount(Integer extraCaurisAmount) { this.extraCaurisAmount = extraCaurisAmount; }
+    public void setListingKind(ListingKind listingKind) { this.listingKind = listingKind; }
+    public void setDescription(String description) { this.description = description; }
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 type Props = {
-  src: string;
+  src: string | null | undefined;
   alt: string;
   className?: string;
 };
@@ -13,6 +13,10 @@ export function AuthenticatedImage({ src, alt, className }: Props) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!src) {
+      setError(true);
+      return;
+    }
     if (src.startsWith("http://") || src.startsWith("https://")) {
       setDisplaySrc(src);
       return;

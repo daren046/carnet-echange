@@ -74,7 +74,7 @@ public class AuthService {
         } else {
             notificationService.notify(user, NotificationType.WELCOME,
                     "Bienvenue sur Perso",
-                    "Vous avez reçu 1 tampon de bienvenue. Déposez un manuel ou parcourez le catalogue.",
+                    "Vous avez reçu 1 cauris de bienvenue. Déposez un manuel ou parcourez le catalogue.",
                     "/catalog");
         }
         return user;

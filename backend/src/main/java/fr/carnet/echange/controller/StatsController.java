@@ -25,7 +25,9 @@ public class StatsController {
 
     @GetMapping
     public ApiResponse<ImpactStatsDto> impact() {
-        long deposited = bookCopyRepository.count();
+        long pending = bookCopyRepository.countByStatus(CopyStatus.PENDING_REVIEW);
+        long rejected = bookCopyRepository.countByStatus(CopyStatus.REJECTED);
+        long deposited = bookCopyRepository.count() - pending - rejected;
         long available = bookCopyRepository.countByStatus(CopyStatus.AVAILABLE);
         long delivered = bookCopyRepository.countByStatus(CopyStatus.DELIVERED);
         long members = userRepository.count();

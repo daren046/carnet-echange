@@ -1,0 +1,169 @@
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import {
+  approveListing,
+  creditCauris,
+  decideExtraCauris,
+  getModerationInbox,
+  rejectListing,
+} from "../api/client";
+import { AuthenticatedImage } from "../components/AuthenticatedImage";
+import { Layout } from "../components/Layout";
+import { Badge, Card, EmptyState, LoadingState, PageHeader, PrimaryButton, inputClass } from "../components/ui";
+import { CONDITION_LABELS, EXTRA_CAURIS_LABELS, type BookCopy } from "../types";
+
+type Tab = "listings" | "cauris" | "extra";
+
+export function Admin() {
+  const [tab, setTab] = useState<Tab>("listings");
+  const [loading, setLoading] = useState(true);
+  const [pendingListings, setPendingListings] = useState<BookCopy[]>([]);
+  const [pendingCauris, setPendingCauris] = useState<BookCopy[]>([]);
+  const [extraRequests, setExtraRequests] = useState<BookCopy[]>([]);
+  const [amounts, setAmounts] = useState<Record<number, string>>({});
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await getModerationInbox();
+      setPendingListings(res.data.pendingListings);
+      setPendingCauris(res.data.pendingCauris);
+      setExtraRequests(res.data.extraCaurisRequests);
+    } catch {
+      toast.error("Impossible de charger la modération");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const run = async (action: () => Promise<unknown>, success: string) => {
+    try {
+      await action();
+      toast.success(success);
+      await load();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || "Action impossible");
+    }
+  };
+
+  const tabs: { id: Tab; label: string; count: number }[] = [
+    { id: "listings", label: "Annonces visiteurs", count: pendingListings.length },
+    { id: "cauris", label: "Cauris à délivrer", count: pendingCauris.length },
+    { id: "extra", label: "Cauris supplémentaires", count: extraRequests.length },
+  ];
+
+  const visible =
+    tab === "listings" ? pendingListings : tab === "cauris" ? pendingCauris : extraRequests;
+
+  return (
+    <Layout>
+      <PageHeader
+        title="Espace équipe"
+        subtitle="Validez les publications des non-abonnés, délivrez les cauris selon l’état des livres, et répondez aux demandes supplémentaires sous 48 h."
+      />
+      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+        {tabs.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setTab(item.id)}
+            className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              tab === item.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {item.label} ({item.count})
+          </button>
+        ))}
+      </div>
+      <div className="mt-6">
+        {loading ? (
+          <LoadingState />
+        ) : visible.length === 0 ? (
+          <EmptyState message="Rien en attente dans cet onglet." />
+        ) : (
+          <div className="space-y-4">
+            {visible.map((book) => (
+              <Card key={book.id} className="p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row">
+                  <div className="h-28 w-full shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-28 sm:w-36">
+                    <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-slate-900">{book.title}</h3>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <Badge>{CONDITION_LABELS[book.condition]}</Badge>
+                      <Badge>{book.zoneName}</Badge>
+                      {book.anonymous && <Badge>Anonyme</Badge>}
+                      {tab === "extra" && (
+                        <Badge tone="amber">{EXTRA_CAURIS_LABELS[book.extraCaurisStatus]}</Badge>
+                      )}
+                    </div>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {book.depositorName} · {new Date(book.createdAt).toLocaleString("fr-FR")}
+                      {book.contactPhone ? ` · ${book.contactPhone}` : ""}
+                    </p>
+                    {tab === "extra" && book.extraCaurisNote && (
+                      <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        {book.extraCaurisNote}
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {tab === "listings" && (
+                        <>
+                          <PrimaryButton onClick={() => run(() => approveListing(book.id), "Annonce publiée")}>
+                            Publier
+                          </PrimaryButton>
+                          <PrimaryButton
+                            variant="danger"
+                            onClick={() => run(() => rejectListing(book.id), "Annonce refusée")}
+                          >
+                            Refuser
+                          </PrimaryButton>
+                        </>
+                      )}
+                      {tab === "cauris" && (
+                        <PrimaryButton onClick={() => run(() => creditCauris(book.id), "1 cauris délivré")}>
+                          Délivrer 1 cauris
+                        </PrimaryButton>
+                      )}
+                      {tab === "extra" && (
+                        <>
+                          <input
+                            inputMode="numeric"
+                            className={`${inputClass} mt-0 w-24`}
+                            placeholder="Nb"
+                            value={amounts[book.id] ?? "1"}
+                            onChange={(e) => setAmounts((prev) => ({ ...prev, [book.id]: e.target.value }))}
+                          />
+                          <PrimaryButton
+                            onClick={() => {
+                              const n = Number((amounts[book.id] ?? "1").replace(/[^0-9]/g, ""));
+                              return run(() => decideExtraCauris(book.id, true, n), "Cauris supplémentaires accordés");
+                            }}
+                          >
+                            Accorder
+                          </PrimaryButton>
+                          <PrimaryButton
+                            variant="danger"
+                            onClick={() => run(() => decideExtraCauris(book.id, false), "Demande refusée")}
+                          >
+                            Refuser
+                          </PrimaryButton>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
