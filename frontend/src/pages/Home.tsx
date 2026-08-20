@@ -47,7 +47,7 @@ export function Home() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    searchBooks({ libraryMode: false })
+    searchBooks()
       .then((res) => {
         if (!cancelled) setBooks([...res.data].sort(byNewest));
       })
@@ -81,7 +81,7 @@ export function Home() {
     setSearchParams(next);
   };
 
-  const bookAction = () => {
+  const bookAction = (book: BookCopy) => {
     if (seller) {
       return (
         <Link
@@ -89,6 +89,16 @@ export function Home() {
           className="block w-full rounded-xl border border-slate-200 bg-white py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           Retour à mon espace
+        </Link>
+      );
+    }
+    if (book.libraryMode) {
+      return (
+        <Link
+          to="/library"
+          className="block w-full rounded-xl bg-violet-700 py-2.5 text-center text-sm font-semibold text-white hover:bg-violet-800"
+        >
+          {user ? "Emprunter" : "Voir en bibliothèque"}
         </Link>
       );
     }
@@ -202,7 +212,7 @@ export function Home() {
                   subject: listingSubjectLabel(book.listingCategory, book.subject) ?? "",
                   condition: CONDITION_LABELS[book.condition],
                 }}
-                action={book.listingKind === "WANTED" ? undefined : bookAction()}
+                action={book.listingKind === "WANTED" ? undefined : bookAction(book)}
               />
             ))}
           </div>

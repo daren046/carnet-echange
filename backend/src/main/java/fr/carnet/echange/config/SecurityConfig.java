@@ -53,6 +53,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/books").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/books/deposit").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/library").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/library/deposit-amount").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/files/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

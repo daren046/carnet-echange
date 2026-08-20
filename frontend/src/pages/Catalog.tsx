@@ -49,7 +49,6 @@ export function Catalog() {
     try {
       const res = await searchBooks({
         subject: isSubjectCategory(category) ? category : undefined,
-        libraryMode: false,
         zoneId: zoneFilter !== "" ? zoneFilter : undefined,
         title: title || undefined,
         listingCategory: "BOOKS",
@@ -179,7 +178,14 @@ export function Catalog() {
                   condition: CONDITION_LABELS[book.condition],
                 }}
                 action={
-                  user ? (
+                  book.libraryMode ? (
+                    <Link
+                      to="/library"
+                      className="block w-full rounded-xl bg-violet-700 py-2.5 text-center text-sm font-semibold text-white hover:bg-violet-800"
+                    >
+                      {user ? "Emprunter" : "Voir en bibliothèque"}
+                    </Link>
+                  ) : user ? (
                     <PrimaryButton onClick={() => handleReserve(book)} className="w-full">
                       Réserver ({formatCauris(book.pickupCaurisCost > 0 ? book.pickupCaurisCost : 1)} + 1 000 F)
                     </PrimaryButton>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   borrowLibraryBook,
@@ -116,7 +117,14 @@ export function Library() {
                     <PrimaryButton variant="violet" onClick={() => handleBorrow(book.id)} className="w-full">
                       Emprunter ({depositAmount.toLocaleString("fr-FR")} F caution)
                     </PrimaryButton>
-                  ) : undefined
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="block w-full rounded-xl bg-violet-700 py-2.5 text-center text-sm font-semibold text-white hover:bg-violet-800"
+                    >
+                      Se connecter pour emprunter
+                    </Link>
+                  )
                 }
               />
             ))}

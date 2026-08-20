@@ -42,7 +42,8 @@ api.interceptors.response.use(
       url.includes("/auth/login") ||
       url.includes("/books/deposit") ||
       (error.config?.method === "get" &&
-        (url === "/books" || url.endsWith("/books") || url.includes("/files/")));
+        (url === "/books" || url.endsWith("/books") || url.includes("/files/")
+          || url === "/library" || url.endsWith("/library") || url.includes("/library/deposit-amount")));
     if (error.response?.status === 401 && !publicCall) {
       localStorage.removeItem("accessToken");
       if (window.location.pathname !== "/login") {

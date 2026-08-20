@@ -54,6 +54,7 @@ export function MyDeposits() {
                     <Badge>{listingSubjectLabel(book.listingCategory, book.subject)}</Badge>
                   )}
                   <Badge>{CONDITION_LABELS[book.condition]}</Badge>
+                  {book.libraryMode && <Badge tone="violet">Bibliothèque</Badge>}
                   {!book.libraryMode && (
                     <Badge>{OFFER_TYPE_LABELS[book.offerType] ?? "Échange"}</Badge>
                   )}

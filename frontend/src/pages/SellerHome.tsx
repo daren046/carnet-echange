@@ -167,6 +167,7 @@ export function SellerHome() {
                       <Badge>{listingSubjectLabel(book.listingCategory, book.subject)}</Badge>
                     )}
                     {book.listingKind !== "WANTED" && <Badge>{CONDITION_LABELS[book.condition]}</Badge>}
+                    {book.libraryMode && <Badge tone="violet">Bibliothèque</Badge>}
                     {!book.libraryMode && book.listingKind !== "WANTED" && (
                       <Badge
                         tone={
