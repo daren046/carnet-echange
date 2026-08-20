@@ -123,7 +123,7 @@ export function About() {
           le partage et les interactions au sein de la communauté.
         </p>
         <p className="mt-4 max-w-3xl text-sm font-medium text-emerald-800">
-          Ambition : fédérer l’Afrique autour d’une consommation plus responsable, plus solidaire et plus durable.
+          Ambition : Fédérer l’Afrique autour d’une consommation plus responsable, plus solidaire et plus durable.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/deposit">
