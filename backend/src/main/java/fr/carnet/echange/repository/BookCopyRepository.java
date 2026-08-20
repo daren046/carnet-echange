@@ -54,4 +54,10 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
             ListingCategory listingCategory, CopyStatus status);
 
     long countByStatus(CopyStatus status);
+
+    long countByDepositorIdAndListingCategoryAndListingKindAndLibraryModeFalseAndStatusNot(
+            Long depositorId,
+            ListingCategory listingCategory,
+            ListingKind listingKind,
+            CopyStatus status);
 }

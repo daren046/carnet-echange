@@ -21,7 +21,7 @@ export type CopyStatus = "PENDING_REVIEW" | "AVAILABLE" | "RESERVED" | "IN_DELIV
 export type DeliveryStatus = "PENDING" | "IN_PROGRESS" | "DELIVERED";
 export type ExtraCaurisStatus = "NONE" | "PENDING" | "APPROVED" | "REJECTED";
 export type TransactionType =
-  | "WELCOME_BONUS" | "DEPOSIT" | "EXTRA_CAURIS" | "PICKUP" | "PICKUP_REFUND"
+  | "WELCOME_BONUS" | "DEPOSIT" | "EXTRA_CAURIS" | "TEAM_GRANT" | "PICKUP" | "PICKUP_REFUND"
   | "DELIVERY_PAYMENT" | "DELIVERY_REFUND" | "WALLET_TOPUP"
   | "LIBRARY_DEPOSIT" | "LIBRARY_REFUND";
 
@@ -46,6 +46,7 @@ export interface UserMe {
   stampBalance: number;
   depositBalance: number;
   walletBalance: number;
+  hasDepositedBooks: boolean;
 }
 
 export type NotificationType =
@@ -56,7 +57,8 @@ export type NotificationType =
   | "DELIVERED"
   | "LISTING_APPROVED"
   | "CAURIS_CREDITED"
-  | "EXTRA_CAURIS";
+  | "EXTRA_CAURIS"
+  | "CAURIS_GRANT";
 
 export interface AppNotification {
   id: number;
@@ -76,10 +78,24 @@ export interface ImpactStats {
   estimatedSavedCfa: number;
 }
 
+export type GrantStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface CaurisGrantRequest {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  note: string;
+  status: GrantStatus;
+  amountGranted: number | null;
+  createdAt: string;
+}
+
 export interface ModerationInbox {
   pendingListings: BookCopy[];
   pendingCauris: BookCopy[];
   extraCaurisRequests: BookCopy[];
+  grantRequests: CaurisGrantRequest[];
 }
 
 export interface AuthResponse {
@@ -120,6 +136,7 @@ export interface BookCopy {
   extraCaurisAmount: number | null;
   listingKind: ListingKind;
   description: string | null;
+  pickupCaurisCost: number;
 }
 
 export interface Transaction {
@@ -259,7 +276,7 @@ export const EXTRA_CAURIS_LABELS: Record<ExtraCaurisStatus, string> = {
 };
 
 export function formatCauris(n: number) {
-  return `${n} cauris`;
+  return Math.abs(n) === 1 ? `${n} cauri` : `${n} cauris`;
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

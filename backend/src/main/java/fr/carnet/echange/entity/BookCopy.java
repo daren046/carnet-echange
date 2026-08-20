@@ -95,6 +95,10 @@ public class BookCopy {
     @Column(length = 1000)
     private String description;
 
+    /** Nombre de cauris à débiter au retrait. Null / 0 = 1. */
+    @Column(nullable = false, columnDefinition = "integer default 1")
+    private int pickupCaurisCost = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private User reservedBy;
 
@@ -118,6 +122,7 @@ public class BookCopy {
         this.offerType = OfferType.EXCHANGE;
         this.listingKind = ListingKind.OFFER;
         this.extraCaurisStatus = ExtraCaurisStatus.NONE;
+        this.pickupCaurisCost = 1;
     }
 
     public Long getId() { return id; }
@@ -152,6 +157,7 @@ public class BookCopy {
         return listingKind != null ? listingKind : ListingKind.OFFER;
     }
     public String getDescription() { return description; }
+    public int getPickupCaurisCost() { return pickupCaurisCost < 1 ? 1 : pickupCaurisCost; }
     public User getReservedBy() { return reservedBy; }
     public Instant getCreatedAt() { return createdAt; }
 
@@ -172,4 +178,7 @@ public class BookCopy {
     public void setExtraCaurisAmount(Integer extraCaurisAmount) { this.extraCaurisAmount = extraCaurisAmount; }
     public void setListingKind(ListingKind listingKind) { this.listingKind = listingKind; }
     public void setDescription(String description) { this.description = description; }
+    public void setPickupCaurisCost(int pickupCaurisCost) {
+        this.pickupCaurisCost = pickupCaurisCost < 1 ? 1 : pickupCaurisCost;
+    }
 }

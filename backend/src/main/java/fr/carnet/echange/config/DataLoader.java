@@ -331,7 +331,7 @@ public class DataLoader implements CommandLineRunner {
         if (demo != null) {
             notificationRepository.save(new Notification(demo, NotificationType.WELCOME,
                     "Bienvenue Marie",
-                    "Vous avez 1 cauris et 10 000 F. Explorez le catalogue ou déposez un manuel.",
+                    "Vous avez 1 cauri et 10 000 F. Explorez le catalogue ou déposez un manuel.",
                     "/catalog"));
         }
         if (livreur != null) {

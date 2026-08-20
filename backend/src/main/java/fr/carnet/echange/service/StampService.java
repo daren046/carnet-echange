@@ -6,6 +6,7 @@ import fr.carnet.echange.entity.User;
 import fr.carnet.echange.enums.TransactionType;
 import fr.carnet.echange.repository.TransactionRepository;
 import fr.carnet.echange.repository.UserRepository;
+import fr.carnet.echange.util.CaurisLabels;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +40,7 @@ public class StampService {
         userRepository.save(user);
         transactionRepository.save(new Transaction(
                 user, TransactionType.DEPOSIT, 1, 0, bookCopy,
-                "Cauris gagné pour le dépôt : " + bookCopy.getTitle()));
+                "Cauri gagné pour le dépôt : " + bookCopy.getTitle()));
     }
 
     @Transactional
@@ -51,27 +52,41 @@ public class StampService {
         userRepository.save(user);
         transactionRepository.save(new Transaction(
                 user, TransactionType.EXTRA_CAURIS, amount, 0, bookCopy,
-                amount + " cauris supplémentaires pour : " + bookCopy.getTitle()));
+                CaurisLabels.extra(amount) + " pour : " + bookCopy.getTitle()));
+    }
+
+    @Transactional
+    public void creditTeamGrant(User user, int amount) {
+        if (amount < 1) {
+            throw new IllegalArgumentException("Le nombre de cauris doit être au moins 1");
+        }
+        user.setStampBalance(user.getStampBalance() + amount);
+        userRepository.save(user);
+        transactionRepository.save(new Transaction(
+                user, TransactionType.TEAM_GRANT, amount, 0, null,
+                CaurisLabels.of(amount) + " accordés par l’équipe"));
     }
 
     @Transactional
     public void debitPickup(User user, BookCopy bookCopy) {
-        if (user.getStampBalance() < 1) {
-            throw new IllegalStateException("Solde de cauris insuffisant");
+        int cost = bookCopy.getPickupCaurisCost();
+        if (user.getStampBalance() < cost) {
+            throw new IllegalStateException("Solde de cauris insuffisant (" + CaurisLabels.of(cost) + " requis)");
         }
-        user.setStampBalance(user.getStampBalance() - 1);
+        user.setStampBalance(user.getStampBalance() - cost);
         userRepository.save(user);
         transactionRepository.save(new Transaction(
-                user, TransactionType.PICKUP, -1, 0, bookCopy,
-                "Cauris utilisé pour récupérer : " + bookCopy.getTitle()));
+                user, TransactionType.PICKUP, -cost, 0, bookCopy,
+                CaurisLabels.of(cost) + " utilisés pour récupérer : " + bookCopy.getTitle()));
     }
 
     @Transactional
-    public void refundPickup(User user, BookCopy bookCopy) {
-        user.setStampBalance(user.getStampBalance() + 1);
+    public void refundPickup(User user, BookCopy bookCopy, int amount) {
+        int refund = amount < 1 ? 1 : amount;
+        user.setStampBalance(user.getStampBalance() + refund);
         userRepository.save(user);
         transactionRepository.save(new Transaction(
-                user, TransactionType.PICKUP_REFUND, 1, 0, bookCopy,
-                "Cauris remboursé — annulation : " + bookCopy.getTitle()));
+                user, TransactionType.PICKUP_REFUND, refund, 0, bookCopy,
+                CaurisLabels.of(refund) + " remboursés — annulation : " + bookCopy.getTitle()));
     }
 }

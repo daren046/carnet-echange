@@ -15,5 +15,6 @@ public record UserMeDto(
         String zoneCode,
         int stampBalance,
         int depositBalance,
-        int walletBalance
+        int walletBalance,
+        boolean hasDepositedBooks
 ) {}

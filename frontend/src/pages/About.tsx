@@ -53,7 +53,7 @@ const HOW_IT_WORKS = [
 const FAQ = [
   {
     q: "Je cherche un livre, je fais comment ?",
-    a: "Publiez une recherche : titre, précisions et un numéro. Les personnes qui ont l’article vous contactent. Ce n’est pas une offre : aucun cauris n’est débité.",
+    a: "Publiez une recherche : titre, précisions et un numéro. Les personnes qui ont l’article vous contactent. Ce n’est pas une offre : aucun cauri n’est débité.",
   },
   {
     q: "Je dois m’inscrire pour regarder ?",
@@ -65,10 +65,10 @@ const FAQ = [
   },
   {
     q: "Comment fonctionnent les cauris ?",
-    a: "Donner un livre rapporte un cauris, délivré après validation de l’état par nos équipes. Dix livres remis peuvent ainsi valoir dix cauris. Un cauris permet ensuite de récupérer un livre : la déduction est soumise à votre autorisation avant traitement.",
+    a: "Donner un livre rapporte un cauri, délivré après validation de l’état par nos équipes. Dix livres remis peuvent ainsi valoir dix cauris. Un cauri permet ensuite de récupérer un livre : la déduction est soumise à votre autorisation avant traitement. Certains livres coûtent des cauris supplémentaires au retrait — contactez l’équipe. Si vous n’avez jamais remis de livres, vous pouvez aussi obtenir des cauris auprès de nos équipes.",
   },
   {
-    q: "Puis-je demander plus d’un cauris pour un livre ?",
+    q: "Puis-je demander plus d’un cauri pour un livre ?",
     a: "Oui, pour certaines catégories. Vous soumettez une demande ; nos équipes vous font un retour sous 48 h.",
   },
   {
@@ -77,7 +77,7 @@ const FAQ = [
   },
   {
     q: "C’est quoi la bibliothèque ?",
-    a: "Certains ouvrages s’empruntent avec une caution (5 000 F) remboursée au retour. Aucun cauris n’est débité.",
+    a: "Certains ouvrages s’empruntent avec une caution (5 000 F) remboursée au retour. Aucun cauri n’est débité.",
   },
   {
     q: "Puis-je publier sans donner mon nom ?",
@@ -85,7 +85,7 @@ const FAQ = [
   },
   {
     q: "Puis-je annuler une commande ?",
-    a: "Oui, tant que le livreur n’a pas pris la tournée. Le cauris et les 1 000 F sont alors renvoyés.",
+    a: "Oui, tant que le livreur n’a pas pris la tournée. Le cauri et les 1 000 F sont alors renvoyés.",
   },
 ];
 
@@ -127,13 +127,7 @@ export function About() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/deposit">
-            <PrimaryButton>Déposer une offre</PrimaryButton>
-          </Link>
-          <Link
-            to="/recherche"
-            className="inline-flex items-center justify-center rounded-xl border border-sky-200 bg-white px-4 py-2.5 text-sm font-semibold text-sky-900 hover:bg-sky-50"
-          >
-            Publier une recherche
+            <PrimaryButton>Déposer une annonce</PrimaryButton>
           </Link>
           <Link
             to="/"
@@ -189,14 +183,14 @@ export function About() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Le système de cauris</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Un cauris est l’unité d’échange de Perso pour les livres. Il découple le don et la
+                Un cauri est l’unité d’échange de Perso pour les livres. Il découple le don et la
                 récupération : vous donnez aujourd’hui, vous retirez plus tard, sans échange de pair à pair.
               </p>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
                   <h3 className="font-medium text-slate-900">Remise de livres</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Donner un livre rapporte un cauris. Si vous donnez 10 livres, vous pouvez donc obtenir
+                    Donner un livre rapporte un cauri. Si vous donnez 10 livres, vous pouvez donc obtenir
                     10 cauris. Ceux-ci sont délivrés après validation de nos équipes, en fonction de l’état
                     du livre remis.
                   </p>
@@ -208,8 +202,16 @@ export function About() {
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
                   <h3 className="font-medium text-slate-900">Retrait de livres</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Un cauris vous permet de récupérer un livre sur la plateforme. La déduction d’un cauris
+                    Un cauri vous permet de récupérer un livre sur la plateforme. La déduction d’un cauri
                     de votre compte vous est soumise pour autorisation avant traitement.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    Certains livres coûtent des cauris supplémentaires au retrait. Contactez notre équipe
+                    pour plus d’informations.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    Si vous n’avez jamais remis de livres sur la plateforme, vous pouvez obtenir des cauris
+                    auprès de nos équipes (depuis Mon compte).
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     La livraison, regroupée par zone à Ouagadougou, est à 1 000 F.

@@ -25,13 +25,12 @@ import { AuthenticatedImage } from "./AuthenticatedImage";
 import { NotificationBell } from "./NotificationBell";
 import { useAuth } from "../context/AuthContext";
 import { homePathFor, isAdmin, isDelivererOnly, isSellerOnly } from "../utils/roles";
-import { formatCfa, LISTING_KIND_LABELS, OFFER_TYPE_LABELS, type ListingKind, type OfferType } from "../types";
+import { formatCfa, formatCauris, LISTING_KIND_LABELS, OFFER_TYPE_LABELS, type ListingKind, type OfferType } from "../types";
 
 const primaryNav = [
   { to: "/", label: "Accueil", icon: Home },
   { to: "/annonces", label: "Catalogue", icon: BookOpen },
-  { to: "/deposit", label: "Offre", icon: PlusCircle },
-  { to: "/recherche", label: "Recherche", icon: Search },
+  { to: "/deposit", label: "Déposer", icon: PlusCircle },
   { to: "/library", label: "Bibliothèque", icon: Library },
 ];
 
@@ -40,8 +39,7 @@ const publicBarNav = [
   { to: "/livres", label: "Livres" },
   { to: "/?categorie=deco", label: "Intérieur Déco" },
   { to: "/?categorie=divers", label: "Articles divers" },
-  { to: "/deposit", label: "Déposer une offre" },
-  { to: "/recherche", label: "Publier une recherche" },
+  { to: "/deposit", label: "Déposer une annonce" },
   { to: "/a-propos", label: "À propos" },
   { to: "/annonces", label: "Voir toutes les annonces" },
 ];
@@ -60,7 +58,6 @@ const sellerNavItems = [
   { to: "/", label: "Accueil", icon: Home },
   { to: "/seller", label: "Mes ventes", icon: Store },
   { to: "/deposit", label: "Déposer", icon: PlusCircle },
-  { to: "/recherche", label: "Recherche", icon: Search },
   { to: "/profile", label: "Mon compte", icon: CircleUser },
 ];
 
@@ -401,6 +398,7 @@ export function BookCard({
     expectedPrice?: number | null;
     listingKind?: ListingKind | string | null;
     description?: string | null;
+    pickupCaurisCost?: number;
   };
   action?: React.ReactNode;
   size?: "default" | "gallery";
@@ -464,6 +462,11 @@ export function BookCard({
           )}
           {book.anonymous && (
             <span className="rounded-full bg-slate-800 px-2 py-0.5 text-white">Anonyme</span>
+          )}
+          {!wanted && !book.libraryMode && (book.pickupCaurisCost ?? 1) > 1 && (
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 font-medium text-amber-800">
+              {formatCauris(book.pickupCaurisCost ?? 1)} au retrait
+            </span>
           )}
         </div>
         <p className="mt-2 text-xs text-slate-400">

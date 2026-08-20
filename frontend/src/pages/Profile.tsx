@@ -1,16 +1,19 @@
 import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { getZones, updateProfile } from "../api/client";
+import { getMyCaurisGrants, getZones, requestCaurisGrant, updateProfile } from "../api/client";
 import { Layout } from "../components/Layout";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
-import { LEVEL_LABELS, ROLE_LABELS, type SchoolLevel, type Zone } from "../types";
+import { formatCauris, LEVEL_LABELS, ROLE_LABELS, type CaurisGrantRequest, type SchoolLevel, type Zone } from "../types";
 import { isDelivererOnly, isSellerOnly } from "../utils/roles";
 
 export function Profile() {
   const { user, refreshUser } = useAuth();
   const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(false);
+  const [grantNote, setGrantNote] = useState("");
+  const [grantLoading, setGrantLoading] = useState(false);
+  const [grants, setGrants] = useState<CaurisGrantRequest[]>([]);
   const [form, setForm] = useState({
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
@@ -28,6 +31,13 @@ export function Profile() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!user || isDelivererOnly(user)) return;
+    getMyCaurisGrants()
+      .then((res) => setGrants(res.data))
+      .catch(() => setGrants([]));
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -65,6 +75,28 @@ export function Profile() {
 
   const student = user && !isDelivererOnly(user) && !isSellerOnly(user);
   const seller = isSellerOnly(user);
+  const pendingGrant = grants.find((g) => g.status === "PENDING");
+  const showGrantForm = user && !isDelivererOnly(user) && !user.hasDepositedBooks;
+
+  const handleGrant = async (e: FormEvent) => {
+    e.preventDefault();
+    if (grantNote.trim().length < 8) {
+      toast.error("Précisez pourquoi vous avez besoin de cauris");
+      return;
+    }
+    setGrantLoading(true);
+    try {
+      const res = await requestCaurisGrant(grantNote.trim());
+      toast.success(res.message || "Demande transmise");
+      setGrantNote("");
+      setGrants((prev) => [res.data, ...prev.filter((g) => g.id !== res.data.id)]);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(msg || "Impossible d’envoyer la demande");
+    } finally {
+      setGrantLoading(false);
+    }
+  };
 
   return (
     <Layout>
@@ -126,6 +158,7 @@ export function Profile() {
             </PrimaryButton>
           </form>
         </Card>
+        <div className="space-y-6">
         <Card className="h-fit">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Compte</p>
           <p className="mt-2 font-medium text-slate-900">{user ? ROLE_LABELS[user.role] : "—"}</p>
@@ -133,7 +166,7 @@ export function Profile() {
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-slate-500">Cauris</dt>
-                <dd className="font-semibold text-emerald-800">{user?.stampBalance ?? 0}</dd>
+                <dd className="font-semibold text-emerald-800">{formatCauris(user?.stampBalance ?? 0)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Portefeuille</dt>
@@ -142,6 +175,34 @@ export function Profile() {
             </dl>
           )}
         </Card>
+        {showGrantForm && (
+          <Card className="h-fit">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Cauris sans dépôt</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Vous n’avez jamais remis de livres. Vous pouvez demander des cauris auprès de l’équipe.
+              Retour sous 48 h.
+            </p>
+            {pendingGrant ? (
+              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Demande en cours depuis le {new Date(pendingGrant.createdAt).toLocaleDateString("fr-FR")}.
+              </p>
+            ) : (
+              <form onSubmit={handleGrant} className="mt-3 space-y-3">
+                <textarea
+                  value={grantNote}
+                  onChange={(e) => setGrantNote(e.target.value)}
+                  rows={3}
+                  placeholder="Expliquez votre besoin (manuels à récupérer, première utilisation…)"
+                  className={inputClass}
+                />
+                <PrimaryButton type="submit" disabled={grantLoading} className="w-full">
+                  {grantLoading ? "Envoi..." : "Demander des cauris"}
+                </PrimaryButton>
+              </form>
+            )}
+          </Card>
+        )}
+        </div>
       </div>
     </Layout>
   );

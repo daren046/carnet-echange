@@ -36,7 +36,7 @@ export function Register() {
     setLoading(true);
     try {
       await register(form);
-      toast.success("Inscription réussie — 1 cauris de bienvenue offert !");
+      toast.success("Inscription réussie — 1 cauri de bienvenue offert !");
       navigate("/login");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -49,7 +49,7 @@ export function Register() {
   return (
     <Layout>
       <div className="mx-auto max-w-lg pt-2">
-        <PageHeader title="Inscription" subtitle="Créez votre compte et recevez 1 cauris de bienvenue" />
+        <PageHeader title="Inscription" subtitle="Créez votre compte et recevez 1 cauri de bienvenue" />
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">

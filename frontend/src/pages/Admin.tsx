@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import {
   approveListing,
   creditCauris,
+  decideCaurisGrant,
   decideExtraCauris,
   getModerationInbox,
   rejectListing,
@@ -10,9 +11,9 @@ import {
 import { AuthenticatedImage } from "../components/AuthenticatedImage";
 import { Layout } from "../components/Layout";
 import { Badge, Card, EmptyState, LoadingState, PageHeader, PrimaryButton, inputClass } from "../components/ui";
-import { CONDITION_LABELS, EXTRA_CAURIS_LABELS, type BookCopy } from "../types";
+import { CONDITION_LABELS, EXTRA_CAURIS_LABELS, formatCauris, type BookCopy, type CaurisGrantRequest } from "../types";
 
-type Tab = "listings" | "cauris" | "extra";
+type Tab = "listings" | "cauris" | "extra" | "grants";
 
 export function Admin() {
   const [tab, setTab] = useState<Tab>("listings");
@@ -20,7 +21,9 @@ export function Admin() {
   const [pendingListings, setPendingListings] = useState<BookCopy[]>([]);
   const [pendingCauris, setPendingCauris] = useState<BookCopy[]>([]);
   const [extraRequests, setExtraRequests] = useState<BookCopy[]>([]);
+  const [grantRequests, setGrantRequests] = useState<CaurisGrantRequest[]>([]);
   const [amounts, setAmounts] = useState<Record<number, string>>({});
+  const [pickupCosts, setPickupCosts] = useState<Record<number, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -29,6 +32,7 @@ export function Admin() {
       setPendingListings(res.data.pendingListings);
       setPendingCauris(res.data.pendingCauris);
       setExtraRequests(res.data.extraCaurisRequests);
+      setGrantRequests(res.data.grantRequests ?? []);
     } catch {
       toast.error("Impossible de charger la modération");
     } finally {
@@ -55,18 +59,19 @@ export function Admin() {
     { id: "listings", label: "Annonces visiteurs", count: pendingListings.length },
     { id: "cauris", label: "Cauris à délivrer", count: pendingCauris.length },
     { id: "extra", label: "Cauris supplémentaires", count: extraRequests.length },
+    { id: "grants", label: "Sans dépôt", count: grantRequests.length },
   ];
 
   const visible =
-    tab === "listings" ? pendingListings : tab === "cauris" ? pendingCauris : extraRequests;
+    tab === "listings" ? pendingListings : tab === "cauris" ? pendingCauris : tab === "extra" ? extraRequests : [];
 
   return (
     <Layout>
       <PageHeader
         title="Espace équipe"
-        subtitle="Validez les publications des non-abonnés, délivrez les cauris selon l’état des livres, et répondez aux demandes supplémentaires sous 48 h."
+        subtitle="Validez les publications des non-abonnés, délivrez les cauris selon l’état des livres, et répondez aux demandes sous 48 h."
       />
-      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+      <div className="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -83,6 +88,45 @@ export function Admin() {
       <div className="mt-6">
         {loading ? (
           <LoadingState />
+        ) : tab === "grants" ? (
+          grantRequests.length === 0 ? (
+            <EmptyState message="Rien en attente dans cet onglet." />
+          ) : (
+            <div className="space-y-4">
+              {grantRequests.map((request) => (
+                <Card key={request.id} className="p-4 sm:p-5">
+                  <h3 className="font-semibold text-slate-900">{request.userName}</h3>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {request.userEmail} · {new Date(request.createdAt).toLocaleString("fr-FR")}
+                  </p>
+                  <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{request.note}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <input
+                      inputMode="numeric"
+                      className={`${inputClass} mt-0 w-24`}
+                      placeholder="Nb"
+                      value={amounts[request.id] ?? "1"}
+                      onChange={(e) => setAmounts((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                    />
+                    <PrimaryButton
+                      onClick={() => {
+                        const n = Number((amounts[request.id] ?? "1").replace(/[^0-9]/g, ""));
+                        return run(() => decideCaurisGrant(request.id, true, n), "Cauris accordés");
+                      }}
+                    >
+                      Accorder
+                    </PrimaryButton>
+                    <PrimaryButton
+                      variant="danger"
+                      onClick={() => run(() => decideCaurisGrant(request.id, false), "Demande refusée")}
+                    >
+                      Refuser
+                    </PrimaryButton>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )
         ) : visible.length === 0 ? (
           <EmptyState message="Rien en attente dans cet onglet." />
         ) : (
@@ -101,6 +145,9 @@ export function Admin() {
                       {book.anonymous && <Badge>Anonyme</Badge>}
                       {tab === "extra" && (
                         <Badge tone="amber">{EXTRA_CAURIS_LABELS[book.extraCaurisStatus]}</Badge>
+                      )}
+                      {tab === "cauris" && book.pickupCaurisCost > 1 && (
+                        <Badge tone="amber">{formatCauris(book.pickupCaurisCost)} au retrait</Badge>
                       )}
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
@@ -127,9 +174,25 @@ export function Admin() {
                         </>
                       )}
                       {tab === "cauris" && (
-                        <PrimaryButton onClick={() => run(() => creditCauris(book.id), "1 cauris délivré")}>
-                          Délivrer 1 cauris
-                        </PrimaryButton>
+                        <>
+                          <label className="flex items-center gap-2 text-xs text-slate-500">
+                            Coût au retrait
+                            <input
+                              inputMode="numeric"
+                              className={`${inputClass} mt-0 w-16`}
+                              value={pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)}
+                              onChange={(e) => setPickupCosts((prev) => ({ ...prev, [book.id]: e.target.value }))}
+                            />
+                          </label>
+                          <PrimaryButton
+                            onClick={() => {
+                              const n = Number((pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)).replace(/[^0-9]/g, ""));
+                              return run(() => creditCauris(book.id, n || 1), "1 cauri délivré");
+                            }}
+                          >
+                            Délivrer 1 cauri
+                          </PrimaryButton>
+                        </>
                       )}
                       {tab === "extra" && (
                         <>

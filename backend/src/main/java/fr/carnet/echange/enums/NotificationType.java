@@ -8,5 +8,6 @@ public enum NotificationType {
     DELIVERED,
     LISTING_APPROVED,
     CAURIS_CREDITED,
-    EXTRA_CAURIS
+    EXTRA_CAURIS,
+    CAURIS_GRANT
 }

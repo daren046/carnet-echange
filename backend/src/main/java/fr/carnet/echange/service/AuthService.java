@@ -28,11 +28,13 @@ public class AuthService {
     private final JwtService jwtService;
     private final StampService stampService;
     private final NotificationService notificationService;
+    private final CaurisGrantService caurisGrantService;
 
     public AuthService(UserRepository userRepository, ZoneRepository zoneRepository,
                        PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
                        JwtService jwtService, StampService stampService,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       CaurisGrantService caurisGrantService) {
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
         this.passwordEncoder = passwordEncoder;
@@ -40,6 +42,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.stampService = stampService;
         this.notificationService = notificationService;
+        this.caurisGrantService = caurisGrantService;
     }
 
     @Transactional
@@ -74,7 +77,7 @@ public class AuthService {
         } else {
             notificationService.notify(user, NotificationType.WELCOME,
                     "Bienvenue sur Perso",
-                    "Vous avez reçu 1 cauris de bienvenue. Déposez un manuel ou parcourez le catalogue.",
+                    "Vous avez reçu 1 cauri de bienvenue. Déposez un manuel ou parcourez le catalogue.",
                     "/catalog");
         }
         return user;
@@ -133,7 +136,8 @@ public class AuthService {
                 user.getZone() != null ? user.getZone().getCode() : null,
                 user.getStampBalance(),
                 user.getDepositBalance(),
-                user.getWalletBalance()
+                user.getWalletBalance(),
+                caurisGrantService.hasDepositedBooks(user)
         );
     }
 }

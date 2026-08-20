@@ -97,13 +97,7 @@ export function SellerHome() {
         />
         <div className="mb-8 flex shrink-0 flex-wrap gap-2">
           <Link to="/deposit">
-            <PrimaryButton className="w-full sm:w-auto">Déposer une offre</PrimaryButton>
-          </Link>
-          <Link
-            to="/recherche"
-            className="inline-flex items-center justify-center rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-900 hover:bg-sky-100"
-          >
-            Publier une recherche
+            <PrimaryButton className="w-full sm:w-auto">Déposer une annonce</PrimaryButton>
           </Link>
         </div>
       </div>

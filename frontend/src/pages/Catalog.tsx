@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import { toast } from "react-toastify";
 import { getZones, reserveBook, searchBooks } from "../api/client";
@@ -17,6 +18,7 @@ import { PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
   CONDITION_LABELS,
+  formatCauris,
   type BookCopy,
   type Zone,
 } from "../types";
@@ -68,18 +70,19 @@ export function Catalog() {
     setTitle(titleInput.trim());
   };
 
-  const handleReserve = async (bookId: number) => {
+  const handleReserve = async (book: BookCopy) => {
     if (!user) {
       toast.info("Connectez-vous pour réserver un livre");
       return;
     }
+    const cost = book.pickupCaurisCost > 0 ? book.pickupCaurisCost : 1;
     const ok = window.confirm(
-      "Vous autorisez la déduction de 1 cauris de votre compte pour récupérer ce livre ?\n\nLa livraison (1 000 F) sera également débitée avant traitement."
+      `Vous autorisez la déduction de ${formatCauris(cost)} de votre compte pour récupérer ce livre ?\n\nLa livraison (1 000 F) sera également débitée avant traitement.`
     );
     if (!ok) return;
     try {
-      await reserveBook(bookId);
-      toast.success("Autorisation enregistrée — 1 cauris et 1 000 F débités");
+      await reserveBook(book.id);
+      toast.success(`Autorisation enregistrée — ${formatCauris(cost)} et 1 000 F débités`);
       await refreshUser();
       load();
     } catch (err: unknown) {
@@ -108,6 +111,15 @@ export function Catalog() {
                 Rechercher
               </PrimaryButton>
             </form>
+            {user && !user.hasDepositedBooks && (
+              <p className="mt-3 text-sm text-slate-500">
+                Vous n’avez pas encore remis de livres ? Vous pouvez{" "}
+                <Link to="/profile" className="font-medium text-emerald-700 hover:underline">
+                  demander des cauris à l’équipe
+                </Link>
+                .
+              </p>
+            )}
           </div>
         }
         activeCategory={category}
@@ -168,8 +180,8 @@ export function Catalog() {
                 }}
                 action={
                   user ? (
-                    <PrimaryButton onClick={() => handleReserve(book.id)} className="w-full">
-                      Réserver (1 cauris + 1 000 F)
+                    <PrimaryButton onClick={() => handleReserve(book)} className="w-full">
+                      Réserver ({formatCauris(book.pickupCaurisCost > 0 ? book.pickupCaurisCost : 1)} + 1 000 F)
                     </PrimaryButton>
                   ) : undefined
                 }

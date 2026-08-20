@@ -4,6 +4,7 @@ public enum TransactionType {
     WELCOME_BONUS,
     DEPOSIT,
     EXTRA_CAURIS,
+    TEAM_GRANT,
     PICKUP,
     PICKUP_REFUND,
     DELIVERY_PAYMENT,

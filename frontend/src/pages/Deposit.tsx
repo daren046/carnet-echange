@@ -1,5 +1,5 @@
-import { FormEvent, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { depositBook } from "../api/client";
@@ -30,10 +30,22 @@ function defaultCategory(listingCategory: ListingCategory): string {
 export function Deposit() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const seller = isSellerOnly(user);
-  const wanted = location.pathname === "/recherche";
+  const [wanted, setWanted] = useState(searchParams.get("intention") === "recherche");
+
+  const setIntention = (isWanted: boolean) => {
+    setWanted(isWanted);
+    const next = new URLSearchParams(searchParams);
+    if (isWanted) next.set("intention", "recherche");
+    else next.delete("intention");
+    const qs = next.toString();
+    navigate(qs ? `/deposit?${qs}` : "/deposit", { replace: true });
+  };
+
+  useEffect(() => {
+    setWanted(searchParams.get("intention") === "recherche");
+  }, [searchParams]);
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -197,35 +209,37 @@ export function Deposit() {
   return (
     <Layout>
       <PageHeader
-        title={wanted ? "Publier une recherche" : "Déposer une offre"}
+        title="Déposer une annonce"
         subtitle={
           wanted
             ? user
               ? "Dites ce que vous cherchez : un membre qui l’a pourra vous contacter."
               : "Sans compte, la recherche est relue par l’équipe. Laissez un numéro pour qu’on vous propose l’article."
             : user
-              ? "Livres, intérieur déco ou articles divers. Un livre déposé ouvre droit à 1 cauris après validation de l’état."
-              : "Sans compte, votre offre est relue par l’équipe avant d’apparaître. Laissez un numéro pour être contacté."
+              ? "Livres, intérieur déco ou articles divers. Un livre remis ouvre droit à 1 cauri après validation de l’état."
+              : "Sans compte, l’annonce est relue par l’équipe avant d’apparaître. Laissez un numéro pour être contacté."
         }
         accent={seller ? "teal" : "emerald"}
       />
       <div className="mb-4 flex max-w-lg gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
-        <Link
-          to="/deposit"
+        <button
+          type="button"
+          onClick={() => setIntention(false)}
           className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium ${
             !wanted ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
           }`}
         >
           J’ai un article
-        </Link>
-        <Link
-          to="/recherche"
+        </button>
+        <button
+          type="button"
+          onClick={() => setIntention(true)}
           className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium ${
             wanted ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
           }`}
         >
           Je cherche un article
-        </Link>
+        </button>
       </div>
       <Card className="max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">

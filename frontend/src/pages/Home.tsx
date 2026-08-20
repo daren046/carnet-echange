@@ -127,20 +127,12 @@ export function Home() {
                     : "Les dernières offres et recherches, tous produits confondus."
                   : "Rien ne se perd : donnez, échangez, vendez ou publiez ce que vous cherchez."}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/deposit"
-                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-                >
-                  Déposer une offre
-                </Link>
-                <Link
-                  to="/recherche"
-                  className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
-                >
-                  Publier une recherche
-                </Link>
-              </div>
+              <Link
+                to="/deposit"
+                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+              >
+                Déposer une annonce
+              </Link>
               </div>
               <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
                 {(

@@ -93,8 +93,8 @@ public class BookController {
             message = "Offre publiée — votre identité reste cachée";
         } else if (listingCategory == ListingCategory.BOOKS && !libraryMode) {
             message = extraCaurisRequested
-                    ? "Livre déposé — 1 cauris après validation de l’état. Demande de cauris supplémentaires transmise (retour sous 48 h)"
-                    : "Livre déposé — 1 cauris sera crédité après validation de l’état par l’équipe";
+                    ? "Livre déposé — 1 cauri après validation de l’état. Demande de cauris supplémentaires transmise (retour sous 48 h)"
+                    : "Livre déposé — 1 cauri sera crédité après validation de l’état par l’équipe";
         } else {
             message = "Offre déposée";
         }

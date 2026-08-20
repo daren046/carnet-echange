@@ -104,7 +104,7 @@ function AppRoutes() {
 
       {/* Dépôt (élèves, parents, vendeurs) */}
       <Route path="/deposit" element={<DepositRoute><Deposit /></DepositRoute>} />
-      <Route path="/recherche" element={<DepositRoute><Deposit /></DepositRoute>} />
+      <Route path="/recherche" element={<Navigate to="/deposit?intention=recherche" replace />} />
 
       {/* Espace élèves / parents */}
       <Route path="/catalog" element={<StudentRoute><Catalog /></StudentRoute>} />

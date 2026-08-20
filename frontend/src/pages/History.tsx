@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { getTransactions } from "../api/client";
 import { Layout } from "../components/Layout";
 import { EmptyState, LoadingState, PageHeader } from "../components/ui";
-import type { Transaction, TransactionType } from "../types";
+import { formatCauris, type Transaction, type TransactionType } from "../types";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   WELCOME_BONUS: "Cauris de bienvenue",
   DEPOSIT: "Dépôt de livre",
   EXTRA_CAURIS: "Cauris supplémentaires",
+  TEAM_GRANT: "Cauris accordés par l’équipe",
   PICKUP: "Récupération",
   PICKUP_REFUND: "Remboursement cauris",
   DELIVERY_PAYMENT: "Paiement livraison",
@@ -48,7 +49,7 @@ export function History() {
               <div className="text-right text-sm">
                 {t.stampDelta !== 0 && (
                   <p className={t.stampDelta > 0 ? "font-semibold text-emerald-700" : "font-semibold text-red-600"}>
-                    {t.stampDelta > 0 ? "+" : ""}{t.stampDelta} cauris
+                    {t.stampDelta > 0 ? "+" : ""}{formatCauris(t.stampDelta)}
                   </p>
                 )}
                 {t.amount > 0 && (

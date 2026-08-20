@@ -19,6 +19,7 @@ import type {
   ListingKind,
   UserRole,
   ModerationInbox,
+  CaurisGrantRequest,
 } from "../types";
 
 const api = axios.create({
@@ -147,6 +148,16 @@ export async function requestExtraCauris(bookCopyId: number, note: string) {
   return data;
 }
 
+export async function requestCaurisGrant(note: string) {
+  const { data } = await api.post<ApiResponse<CaurisGrantRequest>>("/cauris/grants", { note });
+  return data;
+}
+
+export async function getMyCaurisGrants() {
+  const { data } = await api.get<ApiResponse<CaurisGrantRequest[]>>("/cauris/grants");
+  return data;
+}
+
 export async function getModerationInbox() {
   const { data } = await api.get<ApiResponse<ModerationInbox>>("/admin/moderation");
   return data;
@@ -162,13 +173,23 @@ export async function rejectListing(id: number) {
   return data;
 }
 
-export async function creditCauris(id: number) {
-  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/credit-cauris`);
+export async function creditCauris(id: number, pickupCaurisCost?: number) {
+  const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/credit-cauris`, {
+    pickupCaurisCost: pickupCaurisCost ?? 1,
+  });
   return data;
 }
 
 export async function decideExtraCauris(id: number, approved: boolean, amount?: number) {
   const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/extra-cauris`, {
+    approved,
+    amount: amount ?? null,
+  });
+  return data;
+}
+
+export async function decideCaurisGrant(id: number, approved: boolean, amount?: number) {
+  const { data } = await api.post<ApiResponse<CaurisGrantRequest>>(`/admin/cauris-grants/${id}`, {
     approved,
     amount: amount ?? null,
   });

@@ -9,6 +9,7 @@ import fr.carnet.echange.enums.*;
 import fr.carnet.echange.repository.BookCopyRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
+import fr.carnet.echange.util.CaurisLabels;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -146,7 +147,7 @@ public class BookCopyService {
         List<BookCopyDto> extraRequests = bookCopyRepository
                 .findByExtraCaurisStatusOrderByCreatedAtDesc(ExtraCaurisStatus.PENDING)
                 .stream().map(copy -> toTeamDto(copy)).toList();
-        return new ModerationInboxDto(pendingListings, pendingCauris, extraRequests);
+        return new ModerationInboxDto(pendingListings, pendingCauris, extraRequests, List.of());
     }
 
     @Transactional
@@ -172,25 +173,41 @@ public class BookCopyService {
     }
 
     @Transactional
-    public BookCopyDto creditCauris(Long id) {
+    public BookCopyDto creditCauris(Long id, Integer pickupCaurisCost) {
         BookCopy copy = getById(id);
         if (copy.isCaurisCredited()) {
-            throw new IllegalStateException("Le cauris a déjà été délivré pour cet article");
+            throw new IllegalStateException("Le cauri a déjà été délivré pour cet article");
         }
         if (!eligibleForCauris(copy)) {
-            throw new IllegalStateException("Ce dépôt n’ouvre pas droit à un cauris");
+            throw new IllegalStateException("Ce dépôt n’ouvre pas droit à un cauri");
         }
         if (copy.getStatus() == CopyStatus.PENDING_REVIEW || copy.getStatus() == CopyStatus.REJECTED) {
             throw new IllegalStateException("Validez d’abord l’annonce");
+        }
+        if (pickupCaurisCost != null) {
+            applyPickupCost(copy, pickupCaurisCost);
         }
         User depositor = copy.getDepositor();
         stampService.creditDeposit(depositor, copy);
         copy.setCaurisCredited(true);
         bookCopyRepository.save(copy);
         notificationService.notify(depositor, NotificationType.CAURIS_CREDITED,
-                "Cauris délivré",
-                "1 cauris a été crédité pour « " + copy.getTitle() + " », après validation de l’état.",
+                "Cauri délivré",
+                "1 cauri a été crédité pour « " + copy.getTitle() + " », après validation de l’état.",
                 "/history");
+        return toTeamDto(copy);
+    }
+
+    @Transactional
+    public BookCopyDto setPickupCaurisCost(Long id, Integer pickupCaurisCost) {
+        BookCopy copy = getById(id);
+        if (copy.getListingKind() == ListingKind.WANTED
+                || copy.isLibraryMode()
+                || copy.getListingCategory() != ListingCategory.BOOKS) {
+            throw new IllegalStateException("Le coût au retrait ne s’applique qu’aux livres proposés");
+        }
+        applyPickupCost(copy, pickupCaurisCost);
+        bookCopyRepository.save(copy);
         return toTeamDto(copy);
     }
 
@@ -224,7 +241,7 @@ public class BookCopyService {
             copy.setExtraCaurisAmount(amount);
             notificationService.notify(depositor, NotificationType.EXTRA_CAURIS,
                     "Cauris supplémentaires accordés",
-                    amount + " cauris supplémentaires ont été crédités pour « " + copy.getTitle() + " ».",
+                    CaurisLabels.extra(amount) + " ont été crédités pour « " + copy.getTitle() + " ».",
                     "/history");
         } else {
             copy.setExtraCaurisStatus(ExtraCaurisStatus.REJECTED);
@@ -290,7 +307,8 @@ public class BookCopyService {
                 copy.getExtraCaurisStatus(),
                 teamViewer ? copy.getExtraCaurisAmount() : null,
                 copy.getListingKind(),
-                blankToNull(copy.getDescription())
+                blankToNull(copy.getDescription()),
+                copy.getPickupCaurisCost()
         );
     }
 
@@ -454,6 +472,16 @@ public class BookCopyService {
         copy.setExtraCaurisRequested(true);
         copy.setExtraCaurisNote(trimmed);
         copy.setExtraCaurisStatus(ExtraCaurisStatus.PENDING);
+    }
+
+    private static void applyPickupCost(BookCopy copy, Integer pickupCaurisCost) {
+        if (pickupCaurisCost == null) {
+            return;
+        }
+        if (pickupCaurisCost < 1 || pickupCaurisCost > 20) {
+            throw new IllegalArgumentException("Le coût au retrait doit être compris entre 1 et 20 cauris");
+        }
+        copy.setPickupCaurisCost(pickupCaurisCost);
     }
 
     private boolean eligibleForCauris(BookCopy copy) {

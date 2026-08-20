@@ -120,20 +120,12 @@ export function Browse() {
                     ? "Livres, intérieur déco et articles divers."
                     : "Manuels scolaires, du primaire à l’université."}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/deposit"
-                  className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
-                >
-                  Déposer une offre
-                </Link>
-                <Link
-                  to="/recherche"
-                  className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-900 hover:bg-sky-100"
-                >
-                  Publier une recherche
-                </Link>
-              </div>
+              <Link
+                to="/deposit"
+                className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+              >
+                Déposer une annonce
+              </Link>
             </div>
           </div>
         }

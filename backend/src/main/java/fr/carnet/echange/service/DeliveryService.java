@@ -57,7 +57,8 @@ public class DeliveryService {
         if (copy.getListingKind() == ListingKind.WANTED) {
             throw new IllegalStateException("Ceci est une recherche, pas une offre. Contactez la personne qui cherche cet article.");
         }
-        if (user.getStampBalance() < 1) {
+        int pickupCost = copy.getPickupCaurisCost();
+        if (user.getStampBalance() < pickupCost) {
             throw new IllegalStateException("Solde de cauris insuffisant");
         }
         if (user.getWalletBalance() < deliveryFee) {
@@ -72,7 +73,7 @@ public class DeliveryService {
         copy.setReservedBy(user);
 
         Delivery delivery = findOrCreatePendingDelivery(copy.getZone());
-        Reservation reservation = new Reservation(copy, user, deliveryFee);
+        Reservation reservation = new Reservation(copy, user, deliveryFee, pickupCost);
         reservation.setDelivery(delivery);
         delivery.getReservations().add(reservation);
         reservationRepository.save(reservation);
@@ -105,7 +106,7 @@ public class DeliveryService {
             throw new IllegalStateException("Annulation impossible — livraison déjà en cours");
         }
 
-        stampService.refundPickup(user, copy);
+        stampService.refundPickup(user, copy, reservation.getCaurisSpent());
         walletService.credit(user, reservation.getDeliveryFeePaid(), TransactionType.DELIVERY_REFUND, copy,
                 "Remboursement livraison — annulation : " + copy.getTitle());
 
