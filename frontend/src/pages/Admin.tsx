@@ -11,7 +11,7 @@ import {
 import { AuthenticatedImage } from "../components/AuthenticatedImage";
 import { Layout } from "../components/Layout";
 import { Badge, Card, EmptyState, LoadingState, PageHeader, PrimaryButton, inputClass } from "../components/ui";
-import { CONDITION_LABELS, EXTRA_CAURIS_LABELS, formatCauris, type BookCopy, type CaurisGrantRequest } from "../types";
+import { CONDITION_LABELS, EXTRA_CAURIS_LABELS, formatCauris, proposedCaurisFor, type BookCopy, type CaurisGrantRequest } from "../types";
 
 type Tab = "listings" | "cauris" | "extra" | "grants";
 
@@ -43,6 +43,9 @@ export function Admin() {
   useEffect(() => {
     load();
   }, []);
+
+  const proposedAmount = (book: BookCopy) =>
+    book.proposedCauris > 0 ? book.proposedCauris : proposedCaurisFor(book.condition);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     try {
@@ -146,8 +149,8 @@ export function Admin() {
                       {tab === "extra" && (
                         <Badge tone="amber">{EXTRA_CAURIS_LABELS[book.extraCaurisStatus]}</Badge>
                       )}
-                      {tab === "cauris" && book.proposedCauris > 0 && (
-                        <Badge tone="amber">Proposition : {formatCauris(book.proposedCauris)}</Badge>
+                      {tab === "cauris" && proposedAmount(book) > 0 && (
+                        <Badge tone="amber">Proposition : {formatCauris(proposedAmount(book))}</Badge>
                       )}
                       {tab === "cauris" && book.pickupCaurisCost > 1 && (
                         <Badge tone="amber">{formatCauris(book.pickupCaurisCost)} au retrait</Badge>
@@ -183,7 +186,7 @@ export function Admin() {
                             <input
                               inputMode="numeric"
                               className={`${inputClass} mt-0 w-16`}
-                              value={amounts[book.id] ?? String(book.proposedCauris || 1)}
+                              value={amounts[book.id] ?? String(proposedAmount(book))}
                               onChange={(e) => setAmounts((prev) => ({ ...prev, [book.id]: e.target.value }))}
                             />
                           </label>
@@ -200,7 +203,7 @@ export function Admin() {
                           )}
                           <PrimaryButton
                             onClick={() => {
-                              const n = Number((amounts[book.id] ?? String(book.proposedCauris || 1)).replace(/[^0-9]/g, ""));
+                              const n = Number((amounts[book.id] ?? String(proposedAmount(book))).replace(/[^0-9]/g, ""));
                               const pickup = Number((pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)).replace(/[^0-9]/g, ""));
                               return run(
                                 () => creditCauris(book.id, n || 1, pickup || 1),

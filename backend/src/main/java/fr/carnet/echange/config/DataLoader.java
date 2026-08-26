@@ -22,6 +22,7 @@ import fr.carnet.echange.util.CaurisRules;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.sql.Statement;
@@ -50,6 +51,7 @@ public class DataLoader implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
         migrateH2UserRoleEnum();
         seedZones();
@@ -69,6 +71,7 @@ public class DataLoader implements CommandLineRunner {
             migrateOfferType();
             migrateCaurisFlags();
             migrateListingKind();
+            migrateProposedCauris();
         } catch (Exception e) {
             System.err.println("Migration incomplète : " + e.getMessage());
         }
@@ -520,6 +523,23 @@ public class DataLoader implements CommandLineRunner {
                     && copy.getDepositor() != null
                     && !"anonyme@perso.local".equalsIgnoreCase(copy.getDepositor().getEmail());
             copy.setCaurisCredited(eligible);
+            bookCopyRepository.save(copy);
+        }
+    }
+
+    private void migrateProposedCauris() {
+        for (BookCopy copy : bookCopyRepository.findAll()) {
+            if (copy.isCaurisCredited() || copy.getProposedCauris() > 0) {
+                continue;
+            }
+            if (copy.getListingKind() == ListingKind.WANTED || copy.isLibraryMode()) {
+                continue;
+            }
+            User depositor = copy.getDepositor();
+            if (depositor == null || "anonyme@perso.local".equalsIgnoreCase(depositor.getEmail())) {
+                continue;
+            }
+            copy.setProposedCauris(CaurisRules.proposedFor(copy.getCondition()));
             bookCopyRepository.save(copy);
         }
     }

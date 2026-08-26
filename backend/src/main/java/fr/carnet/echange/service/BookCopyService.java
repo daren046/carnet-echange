@@ -337,7 +337,7 @@ public class BookCopyService {
                 copy.getListingKind(),
                 blankToNull(copy.getDescription()),
                 copy.getPickupCaurisCost(),
-                copy.getProposedCauris()
+                visibleProposedCauris(copy)
         );
     }
 
@@ -517,6 +517,16 @@ public class BookCopyService {
         }
         User depositor = copy.getDepositor();
         return depositor != null && !ANONYMOUS_EMAIL.equalsIgnoreCase(depositor.getEmail());
+    }
+
+    private int visibleProposedCauris(BookCopy copy) {
+        if (copy.getProposedCauris() > 0) {
+            return copy.getProposedCauris();
+        }
+        if (!copy.isCaurisCredited() && eligibleForCauris(copy)) {
+            return CaurisRules.proposedFor(copy.getCondition());
+        }
+        return 0;
     }
 
     private static String normalizeDescription(String value, boolean wanted) {
