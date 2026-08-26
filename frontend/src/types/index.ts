@@ -138,6 +138,7 @@ export interface BookCopy {
   listingKind: ListingKind;
   description: string | null;
   pickupCaurisCost: number;
+  proposedCauris: number;
 }
 
 export interface Transaction {
@@ -278,6 +279,12 @@ export const EXTRA_CAURIS_LABELS: Record<ExtraCaurisStatus, string> = {
 
 export function formatCauris(n: number) {
   return Math.abs(n) === 1 ? `${n} cauri` : `${n} cauris`;
+}
+
+export function proposedCaurisFor(condition: BookCondition) {
+  if (condition === "NEUF") return 3;
+  if (condition === "BON") return 2;
+  return 1;
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

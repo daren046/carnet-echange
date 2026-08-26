@@ -38,5 +38,6 @@ public record BookCopyDto(
         Integer extraCaurisAmount,
         ListingKind listingKind,
         String description,
-        int pickupCaurisCost
+        int pickupCaurisCost,
+        int proposedCauris
 ) {}

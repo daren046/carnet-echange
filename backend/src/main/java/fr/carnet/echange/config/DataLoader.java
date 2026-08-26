@@ -18,6 +18,7 @@ import fr.carnet.echange.enums.ListingCategory;
 import fr.carnet.echange.enums.ListingKind;
 import fr.carnet.echange.enums.NotificationType;
 import fr.carnet.echange.enums.OfferType;
+import fr.carnet.echange.util.CaurisRules;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -115,7 +116,7 @@ public class DataLoader implements CommandLineRunner {
             Zone nord = zoneRepository.findByCode("NORD").orElseThrow();
             User demo = new User("Marie", "Demo", "demo@carnet.fr",
                     passwordEncoder.encode("demo1234"), UserRole.STUDENT, SchoolLevel.SIXIEME, nord);
-            demo.setStampBalance(1);
+            demo.setStampBalance(50);
             demo.setWalletBalance(10000);
             demo.setPhone("70000001");
             userRepository.save(demo);
@@ -474,7 +475,7 @@ public class DataLoader implements CommandLineRunner {
         if (demo != null) {
             notificationRepository.save(new Notification(demo, NotificationType.WELCOME,
                     "Bienvenue Marie",
-                    "Vous avez 1 cauri et 10 000 F. Explorez le catalogue ou déposez un manuel.",
+                    "Vous avez 50 cauris de bienvenue et 10 000 F. Don, vente ou échange vous en rapportent d’autres.",
                     "/catalog"));
         }
         if (livreur != null) {
@@ -534,6 +535,9 @@ public class DataLoader implements CommandLineRunner {
                 && depositor != null
                 && !"anonyme@perso.local".equalsIgnoreCase(depositor.getEmail());
         copy.setCaurisCredited(eligible);
+        if (eligible) {
+            copy.setProposedCauris(CaurisRules.proposedFor(condition));
+        }
         return bookCopyRepository.save(copy);
     }
 

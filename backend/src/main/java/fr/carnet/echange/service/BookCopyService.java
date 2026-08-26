@@ -10,6 +10,7 @@ import fr.carnet.echange.repository.BookCopyRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
 import fr.carnet.echange.util.CaurisLabels;
+import fr.carnet.echange.util.CaurisRules;
 import fr.carnet.echange.util.PhoneNumbers;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,9 +121,13 @@ public class BookCopyService {
             copy.setStatus(CopyStatus.PENDING_REVIEW);
         }
         if (!wanted) {
-            applyExtraCaurisRequest(copy, user, category, library, extraCaurisRequested, extraCaurisNote);
+            applyExtraCaurisRequest(copy, user, library, extraCaurisRequested, extraCaurisNote);
         }
         copy = bookCopyRepository.save(copy);
+        if (eligibleForCauris(copy)) {
+            copy.setProposedCauris(CaurisRules.proposedFor(copy.getCondition()));
+            copy = bookCopyRepository.save(copy);
+        }
         return toDto(copy, depositor);
     }
 
@@ -148,8 +153,7 @@ public class BookCopyService {
                 .findByStatusOrderByCreatedAtDesc(CopyStatus.PENDING_REVIEW)
                 .stream().map(copy -> toTeamDto(copy)).toList();
         List<BookCopyDto> pendingCauris = bookCopyRepository
-                .findByCaurisCreditedFalseAndLibraryModeFalseAndListingCategoryAndStatusOrderByCreatedAtDesc(
-                        ListingCategory.BOOKS, CopyStatus.AVAILABLE)
+                .findByCaurisCreditedFalseAndLibraryModeFalseAndStatusOrderByCreatedAtDesc(CopyStatus.AVAILABLE)
                 .stream()
                 .filter(this::eligibleForCauris)
                 .map(this::toTeamDto)
@@ -183,27 +187,35 @@ public class BookCopyService {
     }
 
     @Transactional
-    public BookCopyDto creditCauris(Long id, Integer pickupCaurisCost) {
+    public BookCopyDto creditCauris(Long id, Integer amount, Integer pickupCaurisCost) {
         BookCopy copy = getById(id);
         if (copy.isCaurisCredited()) {
-            throw new IllegalStateException("Le cauri a déjà été délivré pour cet article");
+            throw new IllegalStateException("Les cauris ont déjà été délivrés pour cet article");
         }
         if (!eligibleForCauris(copy)) {
-            throw new IllegalStateException("Ce dépôt n’ouvre pas droit à un cauri");
+            throw new IllegalStateException("Ce dépôt n’ouvre pas droit à des cauris");
         }
         if (copy.getStatus() == CopyStatus.PENDING_REVIEW || copy.getStatus() == CopyStatus.REJECTED) {
             throw new IllegalStateException("Validez d’abord l’annonce");
+        }
+        int credit = amount != null ? amount : copy.getProposedCauris();
+        if (credit < 1) {
+            credit = CaurisRules.proposedFor(copy.getCondition());
+        }
+        if (credit > 20) {
+            throw new IllegalArgumentException("Nombre de cauris trop élevé");
         }
         if (pickupCaurisCost != null) {
             applyPickupCost(copy, pickupCaurisCost);
         }
         User depositor = copy.getDepositor();
-        stampService.creditDeposit(depositor, copy);
+        stampService.creditDeposit(depositor, copy, credit);
+        copy.setProposedCauris(credit);
         copy.setCaurisCredited(true);
         bookCopyRepository.save(copy);
         notificationService.notify(depositor, NotificationType.CAURIS_CREDITED,
-                "Cauri délivré",
-                "1 cauri a été crédité pour « " + copy.getTitle() + " », après validation de l’état.",
+                "Cauris délivrés",
+                CaurisLabels.of(credit) + " ont été crédités pour « " + copy.getTitle() + " », après validation de l’état.",
                 "/history");
         return toTeamDto(copy);
     }
@@ -227,7 +239,7 @@ public class BookCopyService {
         if (copy.getDepositor() == null || !copy.getDepositor().getId().equals(user.getId())) {
             throw new IllegalArgumentException("Cet article ne vous appartient pas");
         }
-        applyExtraCaurisRequest(copy, user, copy.getListingCategory(), copy.isLibraryMode(), true, note);
+        applyExtraCaurisRequest(copy, user, copy.isLibraryMode(), true, note);
         bookCopyRepository.save(copy);
         return toDto(copy, user);
     }
@@ -324,7 +336,8 @@ public class BookCopyService {
                 teamViewer ? copy.getExtraCaurisAmount() : null,
                 copy.getListingKind(),
                 blankToNull(copy.getDescription()),
-                copy.getPickupCaurisCost()
+                copy.getPickupCaurisCost(),
+                copy.getProposedCauris()
         );
     }
 
@@ -462,13 +475,13 @@ public class BookCopyService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
-    private void applyExtraCaurisRequest(BookCopy copy, User user, ListingCategory category,
+    private void applyExtraCaurisRequest(BookCopy copy, User user,
                                          boolean libraryMode, boolean requested, String note) {
         if (!requested) {
             return;
         }
-        if (user == null || libraryMode || category != ListingCategory.BOOKS || copy.getListingKind() == ListingKind.WANTED) {
-            throw new IllegalArgumentException("Les cauris supplémentaires concernent uniquement les livres déposés avec un compte");
+        if (user == null || libraryMode || copy.getListingKind() == ListingKind.WANTED) {
+            throw new IllegalArgumentException("Les cauris supplémentaires concernent uniquement les articles déposés avec un compte");
         }
         if (copy.getExtraCaurisStatus() == ExtraCaurisStatus.PENDING) {
             throw new IllegalStateException("Une demande de cauris supplémentaires est déjà en cours");
@@ -478,7 +491,7 @@ public class BookCopyService {
         }
         String trimmed = note == null ? "" : note.trim();
         if (trimmed.length() < 8) {
-            throw new IllegalArgumentException("Précisez pourquoi ce livre justifie des cauris supplémentaires");
+            throw new IllegalArgumentException("Précisez pourquoi cet article justifie des cauris supplémentaires");
         }
         if (trimmed.length() > 500) {
             throw new IllegalArgumentException("Le message est trop long");
@@ -499,10 +512,7 @@ public class BookCopyService {
     }
 
     private boolean eligibleForCauris(BookCopy copy) {
-        if (copy.getListingKind() == ListingKind.WANTED) {
-            return false;
-        }
-        if (copy.isLibraryMode() || copy.getListingCategory() != ListingCategory.BOOKS) {
+        if (copy.getListingKind() == ListingKind.WANTED || copy.isLibraryMode()) {
             return false;
         }
         User depositor = copy.getDepositor();

@@ -196,8 +196,9 @@ export async function rejectListing(id: number) {
   return data;
 }
 
-export async function creditCauris(id: number, pickupCaurisCost?: number) {
+export async function creditCauris(id: number, amount?: number, pickupCaurisCost?: number) {
   const { data } = await api.post<ApiResponse<BookCopy>>(`/admin/books/${id}/credit-cauris`, {
+    amount: amount ?? null,
     pickupCaurisCost: pickupCaurisCost ?? 1,
   });
   return data;

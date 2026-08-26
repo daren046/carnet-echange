@@ -11,7 +11,7 @@ Application full stack d'échange de manuels scolaires par **tampons**, avec liv
 
 ## Fonctionnalités
 
-- **Inscription / connexion** JWT — 1 tampon de bienvenue offert
+- **Inscription / connexion** JWT — 50 cauris de bienvenue offerts
 - **Dépôt** de manuel avec photo obligatoire (+1 tampon)
 - **Mes dépôts** — suivi du statut (disponible, réservé, en livraison, livré)
 - **Catalogue** filtrable (niveau, matière, **zone**, **recherche par titre**)
@@ -102,7 +102,7 @@ Le compte démo a **10 000 F** de solde Mobile Money.
 
 `backend/src/main/resources/application.properties` :
 
-- `app.welcome-stamps=1` — tampons à l'inscription
+- `app.welcome-stamps=50` — cauris à l'inscription
 - `app.delivery-fee=1000` — frais livraison (FCFA)
 - `app.library-deposit=5000` — caution bibliothèque (FCFA)
 

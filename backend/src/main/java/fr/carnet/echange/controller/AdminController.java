@@ -2,6 +2,7 @@ package fr.carnet.echange.controller;
 
 import fr.carnet.echange.dto.ApiResponse;
 import fr.carnet.echange.dto.book.BookCopyDto;
+import fr.carnet.echange.dto.book.CreditCaurisDto;
 import fr.carnet.echange.dto.book.ExtraCaurisDecisionDto;
 import fr.carnet.echange.dto.book.ModerationInboxDto;
 import fr.carnet.echange.dto.book.PickupCostDto;
@@ -47,9 +48,10 @@ public class AdminController {
 
     @PostMapping("/books/{id}/credit-cauris")
     public ApiResponse<BookCopyDto> creditCauris(@PathVariable Long id,
-                                                 @RequestBody(required = false) PickupCostDto body) {
+                                                 @RequestBody(required = false) CreditCaurisDto body) {
+        Integer amount = body != null ? body.amount() : null;
         Integer pickupCost = body != null ? body.pickupCaurisCost() : null;
-        return ApiResponse.ok("Cauri délivré", bookCopyService.creditCauris(id, pickupCost));
+        return ApiResponse.ok("Cauris délivrés", bookCopyService.creditCauris(id, amount, pickupCost));
     }
 
     @PostMapping("/books/{id}/pickup-cost")

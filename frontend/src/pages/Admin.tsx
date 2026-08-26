@@ -69,7 +69,7 @@ export function Admin() {
     <Layout>
       <PageHeader
         title="Espace équipe"
-        subtitle="Validez les publications des non-abonnés, délivrez les cauris selon l’état des livres, et répondez aux demandes sous 48 h."
+        subtitle="Validez les publications des visiteurs, confirmez les cauris proposés selon l’état, et répondez aux demandes sous 48 h."
       />
       <div className="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
         {tabs.map((item) => (
@@ -146,6 +146,9 @@ export function Admin() {
                       {tab === "extra" && (
                         <Badge tone="amber">{EXTRA_CAURIS_LABELS[book.extraCaurisStatus]}</Badge>
                       )}
+                      {tab === "cauris" && book.proposedCauris > 0 && (
+                        <Badge tone="amber">Proposition : {formatCauris(book.proposedCauris)}</Badge>
+                      )}
                       {tab === "cauris" && book.pickupCaurisCost > 1 && (
                         <Badge tone="amber">{formatCauris(book.pickupCaurisCost)} au retrait</Badge>
                       )}
@@ -176,21 +179,36 @@ export function Admin() {
                       {tab === "cauris" && (
                         <>
                           <label className="flex items-center gap-2 text-xs text-slate-500">
-                            Coût au retrait
+                            Cauris
                             <input
                               inputMode="numeric"
                               className={`${inputClass} mt-0 w-16`}
-                              value={pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)}
-                              onChange={(e) => setPickupCosts((prev) => ({ ...prev, [book.id]: e.target.value }))}
+                              value={amounts[book.id] ?? String(book.proposedCauris || 1)}
+                              onChange={(e) => setAmounts((prev) => ({ ...prev, [book.id]: e.target.value }))}
                             />
                           </label>
+                          {book.listingCategory === "BOOKS" && (
+                            <label className="flex items-center gap-2 text-xs text-slate-500">
+                              Coût au retrait
+                              <input
+                                inputMode="numeric"
+                                className={`${inputClass} mt-0 w-16`}
+                                value={pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)}
+                                onChange={(e) => setPickupCosts((prev) => ({ ...prev, [book.id]: e.target.value }))}
+                              />
+                            </label>
+                          )}
                           <PrimaryButton
                             onClick={() => {
-                              const n = Number((pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)).replace(/[^0-9]/g, ""));
-                              return run(() => creditCauris(book.id, n || 1), "1 cauri délivré");
+                              const n = Number((amounts[book.id] ?? String(book.proposedCauris || 1)).replace(/[^0-9]/g, ""));
+                              const pickup = Number((pickupCosts[book.id] ?? String(book.pickupCaurisCost || 1)).replace(/[^0-9]/g, ""));
+                              return run(
+                                () => creditCauris(book.id, n || 1, pickup || 1),
+                                "Cauris délivrés"
+                              );
                             }}
                           >
-                            Délivrer 1 cauri
+                            Valider et délivrer
                           </PrimaryButton>
                         </>
                       )}

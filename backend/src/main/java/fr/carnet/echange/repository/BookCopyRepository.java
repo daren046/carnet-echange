@@ -50,6 +50,8 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
 
     List<BookCopy> findByExtraCaurisStatusOrderByCreatedAtDesc(ExtraCaurisStatus extraCaurisStatus);
 
+    List<BookCopy> findByCaurisCreditedFalseAndLibraryModeFalseAndStatusOrderByCreatedAtDesc(CopyStatus status);
+
     List<BookCopy> findByCaurisCreditedFalseAndLibraryModeFalseAndListingCategoryAndStatusOrderByCreatedAtDesc(
             ListingCategory listingCategory, CopyStatus status);
 

@@ -35,12 +35,13 @@ public class StampService {
     }
 
     @Transactional
-    public void creditDeposit(User user, BookCopy bookCopy) {
-        user.setStampBalance(user.getStampBalance() + 1);
+    public void creditDeposit(User user, BookCopy bookCopy, int amount) {
+        int credit = amount < 1 ? 1 : amount;
+        user.setStampBalance(user.getStampBalance() + credit);
         userRepository.save(user);
         transactionRepository.save(new Transaction(
-                user, TransactionType.DEPOSIT, 1, 0, bookCopy,
-                "Cauri gagné pour le dépôt : " + bookCopy.getTitle()));
+                user, TransactionType.DEPOSIT, credit, 0, bookCopy,
+                CaurisLabels.of(credit) + " gagnés pour : " + bookCopy.getTitle()));
     }
 
     @Transactional

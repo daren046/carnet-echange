@@ -56,8 +56,8 @@ const FAQ = [
     a: "Publiez une recherche : titre, précisions et un numéro. Les personnes qui ont l’article vous contactent. Ce n’est pas une offre : aucun cauri n’est débité.",
   },
   {
-    q: "Je dois m’inscrire pour regarder ?",
-    a: "Non. Vous parcourez Livres, Intérieur Déco et Articles divers sans compte. Un visiteur ne voit que les articles disponibles. Une fois connecté, vous voyez aussi si un article a été pris — le vendeur le voit de son côté. L’inscription sert à suivre vos annonces, vos cauris et vos commandes.",
+    q: "Je dois m’inscrire pour regarder ou publier ?",
+    a: "Non. Vous parcourez et vous pouvez publier sans compte. Un visiteur ne voit que les articles disponibles. Sans inscription, vous perdez tous les avantages liés à l’attribution de cauris : nous vous recommandons de vous inscrire dès que possible.",
   },
   {
     q: "Pourquoi un code sur mon téléphone ?",
@@ -69,15 +69,15 @@ const FAQ = [
   },
   {
     q: "Comment fonctionnent les cauris ?",
-    a: "Donner un livre rapporte un cauri, délivré après validation de l’état par nos équipes. Dix livres remis peuvent ainsi valoir dix cauris. Un cauri permet ensuite de récupérer un livre : la déduction est soumise à votre autorisation avant traitement. Certains livres coûtent des cauris supplémentaires au retrait — contactez l’équipe. Si vous n’avez jamais remis de livres, vous pouvez aussi obtenir des cauris auprès de nos équipes.",
+    a: "Dès votre première inscription, vous recevez 50 cauris. Ensuite, don, vente, achat ou échange d’un article vous en rapportent d’autres. Ils sont proposés automatiquement selon l’état, puis délivrés après validation de nos équipes. Vous pouvez demander des cauris supplémentaires pour certaines catégories : retour sous 48 h. Cumulez-les pour bénéficier de nombreux avantages.",
   },
   {
-    q: "Puis-je demander plus d’un cauri pour un livre ?",
+    q: "Puis-je demander plus de cauris pour un article ?",
     a: "Oui, pour certaines catégories. Vous soumettez une demande ; nos équipes vous font un retour sous 48 h.",
   },
   {
     q: "Pourquoi 1 000 F de livraison ?",
-    a: "Les 1 000 F paient le livreur qui dépose dans votre zone, pour regrouper les tournées. Ils sont payables uniquement en cas de retrait d’un livre. En cas de remise, le livreur récupère gratuitement le livre et vous avez droit à un cauri.",
+    a: "Les 1 000 F paient le livreur qui dépose dans votre zone, pour regrouper les tournées. Ils sont payables uniquement en cas de retrait d’un livre. En cas de remise, le livreur récupère gratuitement l’article et des cauris vous sont proposés, à valider selon l’état.",
   },
   {
     q: "C’est quoi la bibliothèque ?",
@@ -187,39 +187,37 @@ export function About() {
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Le système de cauris</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Un cauri est l’unité d’échange de Perso pour les livres. Il découple le don et la
-                récupération : vous donnez aujourd’hui, vous retirez plus tard, sans échange de pair à pair.
+                Dès votre première inscription sur la plateforme Perso, vous recevez 50 cauris.
+                Ensuite, vos activités de don, de vente, d’achat ou d’échange d’un article vous
+                rapportent des cauris. Ceux-ci sont proposés automatiquement selon l’état de l’article,
+                puis délivrés après validation de nos équipes.
               </p>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
-                  <h3 className="font-medium text-slate-900">Remise de livres</h3>
+                  <h3 className="font-medium text-slate-900">Gagner des cauris</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Donner un livre rapporte un cauri. Si vous donnez 10 livres, vous pouvez donc obtenir
-                    10 cauris. Ceux-ci sont délivrés après validation de nos équipes, en fonction de l’état
-                    du livre remis.
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                    En cas de remise, le livreur récupère gratuitement le livre et vous avez droit à un
-                    cauri.
+                    Chaque offre (don, vente ou échange) génère une proposition de cauris : 3 si l’article
+                    est neuf, 2 s’il est en bon état, 1 s’il est moyen ou abîmé. L’équipe confirme ou
+                    ajuste avant le crédit.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     Vous pouvez soumettre une demande de cauris supplémentaires pour certaines catégories
-                    de livres. Nos équipes vous feront un retour sous 48 h.
+                    d’articles. Nos équipes vous feront un retour sous 48 h.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    Cumulez le maximum de cauris et bénéficiez de nombreux avantages.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
-                  <h3 className="font-medium text-slate-900">Retrait de livres</h3>
+                  <h3 className="font-medium text-slate-900">Utiliser ses cauris</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Un cauri vous permet de récupérer un livre sur la plateforme. La déduction d’un cauri
-                    de votre compte vous est soumise pour autorisation avant traitement.
+                    Un cauri vous permet de récupérer un livre sur la plateforme. La déduction de votre
+                    compte vous est soumise pour autorisation avant traitement.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                    Certains livres coûtent des cauris supplémentaires au retrait. Contactez notre équipe
-                    pour plus d’informations.
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                    Si vous n’avez jamais remis de livres sur la plateforme, vous pouvez obtenir des cauris
-                    auprès de nos équipes (depuis Mon compte).
+                    La publication d’articles est autorisée sans inscription, mais vous perdez alors
+                    tous les avantages liés à l’attribution de cauris. Nous vous recommandons de vous
+                    inscrire le plus rapidement possible.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     Les 1 000 F de livraison, regroupée par zone à Ouagadougou, sont payables uniquement

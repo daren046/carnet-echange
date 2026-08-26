@@ -6,7 +6,7 @@ import { formatCauris, type Transaction, type TransactionType } from "../types";
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   WELCOME_BONUS: "Cauris de bienvenue",
-  DEPOSIT: "Dépôt de livre",
+  DEPOSIT: "Activité (don, vente ou échange)",
   EXTRA_CAURIS: "Cauris supplémentaires",
   TEAM_GRANT: "Cauris accordés par l’équipe",
   PICKUP: "Récupération",

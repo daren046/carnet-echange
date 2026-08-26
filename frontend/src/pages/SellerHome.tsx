@@ -13,6 +13,7 @@ import {
   COPY_STATUS_LABELS,
   EXTRA_CAURIS_LABELS,
   formatCfa,
+  formatCauris,
   OFFER_TYPE_LABELS,
   type BookCopy,
   type CopyStatus,
@@ -53,7 +54,7 @@ export function SellerHome() {
 
   const handleExtra = async (book: BookCopy) => {
     const note = window.prompt(
-      "Pourquoi ce livre justifie-t-il des cauris supplémentaires ? L’équipe répond sous 48 h."
+      "Pourquoi cet article justifie-t-il des cauris supplémentaires ? L’équipe répond sous 48 h."
     );
     if (note == null) return;
     if (note.trim().length < 8) {
@@ -182,8 +183,12 @@ export function SellerHome() {
                       </Badge>
                     )}
                     {book.anonymous && <Badge>Anonyme</Badge>}
-                    {book.listingCategory === "BOOKS" && !book.libraryMode && book.listingKind !== "WANTED" && !book.caurisCredited && (
-                      <Badge tone="amber">Cauris en attente</Badge>
+                    {!book.libraryMode && book.listingKind !== "WANTED" && !book.caurisCredited && (
+                      <Badge tone="amber">
+                        {book.proposedCauris > 0
+                          ? `${formatCauris(book.proposedCauris)} en attente`
+                          : "Cauris en attente"}
+                      </Badge>
                     )}
                     {book.extraCaurisStatus && book.extraCaurisStatus !== "NONE" && (
                       <Badge tone={book.extraCaurisStatus === "APPROVED" ? "emerald" : "amber"}>
@@ -206,7 +211,7 @@ export function SellerHome() {
                     {tab === "sales" ? "Mouvement du" : "Déposé le"}{" "}
                     {new Date(book.createdAt).toLocaleDateString("fr-FR")}
                   </p>
-                  {tab === "listings" && book.listingCategory === "BOOKS" && !book.libraryMode
+                  {tab === "listings" && !book.libraryMode
                     && book.listingKind !== "WANTED"
                     && (book.extraCaurisStatus === "NONE" || book.extraCaurisStatus === "REJECTED") && (
                     <button

@@ -84,18 +84,18 @@ public class BookController {
         String message;
         if (guest) {
             message = wanted
-                    ? "Recherche envoyée — elle sera visible après validation de l’équipe"
-                    : "Offre envoyée — elle sera visible après validation de l’équipe";
+                    ? "Recherche envoyée — elle sera visible après validation de l’équipe. Sans compte, vous ne bénéficiez pas des cauris."
+                    : "Offre envoyée — elle sera visible après validation. Sans compte, vous perdez les avantages liés aux cauris. Inscrivez-vous dès que possible.";
         } else if (wanted) {
             message = anonymous
                     ? "Recherche publiée — votre identité reste cachée"
                     : "Recherche publiée — les personnes qui ont l’article pourront vous contacter";
         } else if (anonymous) {
             message = "Offre publiée — votre identité reste cachée";
-        } else if (listingCategory == ListingCategory.BOOKS && !libraryMode) {
+        } else if (!libraryMode) {
             message = extraCaurisRequested
-                    ? "Livre déposé — 1 cauri après validation de l’état. Demande de cauris supplémentaires transmise (retour sous 48 h)"
-                    : "Livre déposé — 1 cauri sera crédité après validation de l’état par l’équipe";
+                    ? "Annonce déposée — cauris proposés selon l’état, à valider par l’équipe. Demande de cauris supplémentaires transmise (retour sous 48 h)"
+                    : "Annonce déposée — des cauris seront délivrés après validation de l’état par l’équipe";
         } else {
             message = "Offre déposée";
         }

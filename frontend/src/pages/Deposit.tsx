@@ -16,6 +16,8 @@ import {
   CONDITION_LABELS,
   DECOR_SUBJECTS,
   SUBJECT_LABELS,
+  formatCauris,
+  proposedCaurisFor,
   type BookCondition,
   type ListingCategory,
   type OfferType,
@@ -134,8 +136,8 @@ export function Deposit() {
       toast.error("Indiquez le prix attendu pour une vente");
       return;
     }
-    if (user && !wanted && form.listingCategory === "BOOKS" && !library && form.extraCaurisRequested && form.extraCaurisNote.trim().length < 8) {
-      toast.error("Précisez pourquoi ce livre justifie des cauris supplémentaires");
+    if (user && !wanted && !library && form.extraCaurisRequested && form.extraCaurisNote.trim().length < 8) {
+      toast.error("Précisez pourquoi cet article justifie des cauris supplémentaires");
       return;
     }
 
@@ -169,7 +171,7 @@ export function Deposit() {
       data.append("subject", "AUTRE");
     }
 
-    if (user && !wanted && form.listingCategory === "BOOKS" && !library && form.extraCaurisRequested) {
+    if (user && !wanted && !library && form.extraCaurisRequested) {
       data.append("extraCaurisRequested", "true");
       data.append("extraCaurisNote", form.extraCaurisNote.trim());
     }
@@ -233,8 +235,8 @@ export function Deposit() {
               ? "Dites ce que vous cherchez : un membre qui l’a pourra vous contacter."
               : "Sans compte, la recherche est relue par l’équipe. Laissez un numéro pour qu’on vous propose l’article."
             : user
-              ? "Livres, intérieur déco ou articles divers. Un livre remis ouvre droit à 1 cauri après validation de l’état."
-              : "Sans compte, l’annonce est relue par l’équipe avant d’apparaître. Laissez un numéro pour être contacté."
+              ? "Livres, intérieur déco ou articles divers. Don, vente ou échange : des cauris sont proposés automatiquement, puis validés selon l’état."
+              : "Sans compte, l’annonce est relue par l’équipe. Vous pouvez publier, mais vous perdez les avantages liés aux cauris — inscrivez-vous dès que possible."
         }
         accent={seller ? "teal" : "emerald"}
       />
@@ -381,6 +383,12 @@ export function Deposit() {
                 <option key={k} value={k}>{v}</option>
               ))}
             </select>
+            {user && !form.libraryMode && (
+              <p className="mt-1 text-xs text-amber-800">
+                Proposition automatique : {formatCauris(proposedCaurisFor(form.condition))} selon l’état.
+                L’équipe validera ensuite avant crédit.
+              </p>
+            )}
           </div>
           {!(form.libraryMode && form.listingCategory === "BOOKS") && (
             <div>
@@ -509,8 +517,11 @@ export function Deposit() {
               Déposer en mode bibliothèque (emprunt avec caution, pas de cauris)
             </label>
           )}
-          {user && !wanted && form.listingCategory === "BOOKS" && !form.libraryMode && (
+          {user && !wanted && !form.libraryMode && (
             <div className="space-y-2 rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+              <p className="text-xs text-slate-600">
+                Vous pouvez aussi demander des cauris supplémentaires : nos équipes vous feront un retour sous 48 h.
+              </p>
               <label className="flex items-start gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
@@ -518,7 +529,7 @@ export function Deposit() {
                   onChange={(e) => setForm({ ...form, extraCaurisRequested: e.target.checked })}
                   className="mt-0.5 rounded border-slate-300 text-amber-600"
                 />
-                Demander des cauris supplémentaires pour ce livre
+                Demander des cauris supplémentaires pour cet article
               </label>
               {form.extraCaurisRequested && (
                 <>
@@ -528,7 +539,7 @@ export function Deposit() {
                     onChange={(e) => setForm({ ...form, extraCaurisNote: e.target.value })}
                     className={inputClass}
                     rows={3}
-                    placeholder="Précisez la catégorie ou l’intérêt particulier du livre…"
+                    placeholder="Précisez la catégorie ou l’intérêt particulier de l’article…"
                   />
                   <p className="text-xs text-slate-500">
                     Nos équipes vous feront un retour sous 48 h, après validation de l’état.
@@ -553,7 +564,7 @@ export function Deposit() {
                 ? "Elle restera anonyme. "
                 : "Votre téléphone confirmé pourra être visible une fois publiée. "}
               <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
-              {wanted ? " pour publier immédiatement." : " pour publier immédiatement et obtenir des cauris."}
+              {wanted ? " pour publier immédiatement." : " : vous perdez les avantages liés aux cauris. Inscrivez-vous dès que possible."}
             </p>
           )}
           <PrimaryButton type="submit" disabled={loading} className="w-full py-3">

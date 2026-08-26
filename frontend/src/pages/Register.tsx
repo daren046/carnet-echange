@@ -46,7 +46,7 @@ export function Register() {
         ...form,
         phoneVerificationToken: phoneToken,
       });
-      toast.success("Inscription réussie — 1 cauri de bienvenue offert !");
+      toast.success("Inscription réussie — 50 cauris de bienvenue offerts !");
       navigate("/login");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -61,7 +61,7 @@ export function Register() {
       <div className="mx-auto max-w-lg pt-2">
         <PageHeader
           title="Inscription"
-          subtitle="Comme sur Amazon : email, téléphone confirmé par code, et votre quartier."
+          subtitle="Email, téléphone confirmé par code, quartier — et 50 cauris offerts dès l’inscription."
         />
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">

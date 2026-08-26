@@ -83,7 +83,7 @@ public class AuthService {
         } else {
             notificationService.notify(user, NotificationType.WELCOME,
                     "Bienvenue sur Perso",
-                    "Vous avez reçu 1 cauri de bienvenue. Déposez un manuel ou parcourez le catalogue.",
+                    "Vous avez reçu 50 cauris de bienvenue. Don, vente, achat ou échange vous en rapportent d’autres, après validation de l’état.",
                     "/catalog");
         }
         return user;
