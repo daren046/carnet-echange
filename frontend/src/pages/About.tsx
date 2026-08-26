@@ -57,7 +57,11 @@ const FAQ = [
   },
   {
     q: "Je dois m’inscrire pour regarder ?",
-    a: "Non. Vous parcourez Livres, Intérieur Déco et Articles divers sans compte. L’inscription sert à suivre vos annonces, vos cauris et vos commandes.",
+    a: "Non. Vous parcourez Livres, Intérieur Déco et Articles divers sans compte. Un visiteur ne voit que les articles disponibles. Une fois connecté, vous voyez aussi si un article a été pris — le vendeur le voit de son côté. L’inscription sert à suivre vos annonces, vos cauris et vos commandes.",
+  },
+  {
+    q: "Pourquoi un code sur mon téléphone ?",
+    a: "Comme sur Amazon, on demande l’email et le numéro, puis on envoie un code de confirmation pour s’assurer que le téléphone est bien le vôtre. Le quartier reste demandé pour la remise.",
   },
   {
     q: "Qui valide les annonces ?",

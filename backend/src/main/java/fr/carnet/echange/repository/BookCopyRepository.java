@@ -17,7 +17,7 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
 
     @Query("""
         SELECT b FROM BookCopy b
-        WHERE b.status = :status
+        WHERE b.status IN :statuses
         AND (:level IS NULL OR b.level = :level)
         AND (:subject IS NULL OR b.subject = :subject)
         AND (:libraryMode IS NULL OR b.libraryMode = :libraryMode)
@@ -28,7 +28,7 @@ public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
         ORDER BY b.createdAt DESC
         """)
     List<BookCopy> search(
-            @Param("status") CopyStatus status,
+            @Param("statuses") List<CopyStatus> statuses,
             @Param("level") SchoolLevel level,
             @Param("subject") Subject subject,
             @Param("libraryMode") Boolean libraryMode,

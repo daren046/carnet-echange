@@ -40,13 +40,17 @@ api.interceptors.response.use(
     const url = String(error.config?.url ?? "");
     const publicCall =
       url.includes("/auth/login") ||
+      url.includes("/auth/register") ||
+      url.includes("/verify/phone") ||
       url.includes("/books/deposit") ||
       (error.config?.method === "get" &&
         (url === "/books" || url.endsWith("/books") || url.includes("/files/")
           || url === "/library" || url.endsWith("/library") || url.includes("/library/deposit-amount")));
     if (error.response?.status === 401 && !publicCall) {
       localStorage.removeItem("accessToken");
-      if (window.location.pathname !== "/login") {
+      const onPublicPage = ["/", "/livres", "/deco", "/divers", "/annonces", "/deposit", "/a-propos", "/register", "/login"]
+        .some((p) => window.location.pathname === p || window.location.pathname.startsWith(p + "/"));
+      if (!url.includes("/auth/me") && !onPublicPage && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
@@ -63,12 +67,30 @@ export async function register(payload: {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  phoneVerificationToken: string;
   password: string;
   role: UserRole;
   schoolLevel?: string;
   zoneCode: string;
 }) {
   const { data } = await api.post<ApiResponse<UserMe>>("/auth/register", payload);
+  return data;
+}
+
+export async function sendPhoneCode(phone: string) {
+  const { data } = await api.post<ApiResponse<{ expiresInSeconds: number; debugCode: string | null }>>(
+    "/verify/phone/send",
+    { phone }
+  );
+  return data;
+}
+
+export async function confirmPhoneCode(phone: string, code: string) {
+  const { data } = await api.post<ApiResponse<{ verificationToken: string }>>(
+    "/verify/phone/confirm",
+    { phone, code }
+  );
   return data;
 }
 

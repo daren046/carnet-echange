@@ -10,6 +10,7 @@ import fr.carnet.echange.repository.BookCopyRepository;
 import fr.carnet.echange.repository.UserRepository;
 import fr.carnet.echange.repository.ZoneRepository;
 import fr.carnet.echange.util.CaurisLabels;
+import fr.carnet.echange.util.PhoneNumbers;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,19 +31,22 @@ public class BookCopyService {
     private final UserRepository userRepository;
     private final ZoneRepository zoneRepository;
     private final NotificationService notificationService;
+    private final PhoneVerificationService phoneVerificationService;
 
     public BookCopyService(BookCopyRepository bookCopyRepository,
                            FileStorageService fileStorageService,
                            StampService stampService,
                            UserRepository userRepository,
                            ZoneRepository zoneRepository,
-                           NotificationService notificationService) {
+                           NotificationService notificationService,
+                           PhoneVerificationService phoneVerificationService) {
         this.bookCopyRepository = bookCopyRepository;
         this.fileStorageService = fileStorageService;
         this.stampService = stampService;
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
         this.notificationService = notificationService;
+        this.phoneVerificationService = phoneVerificationService;
     }
 
     @Transactional
@@ -52,7 +56,8 @@ public class BookCopyService {
                                String contactName, String contactPhone, String contactEmail,
                                OfferType offerType, Integer expectedPrice,
                                boolean extraCaurisRequested, String extraCaurisNote,
-                               ListingKind listingKind, String description)
+                               ListingKind listingKind, String description,
+                               String phoneVerificationToken)
             throws IOException {
         ListingCategory category = listingCategory != null ? listingCategory : ListingCategory.BOOKS;
         ListingKind kind = listingKind != null ? listingKind : ListingKind.OFFER;
@@ -76,11 +81,16 @@ public class BookCopyService {
             resolvedSubject = Subject.AUTRE;
         }
 
-        if (user == null && !hideIdentity) {
-            applyGuestContact(contactName, contactPhone, contactEmail);
-        }
-        if (wanted && normalizePhone(contactPhone) == null) {
-            throw new IllegalArgumentException("Indiquez un numéro pour que l’on puisse vous proposer l’article");
+        if (user == null) {
+            applyGuestContact(contactName, contactPhone, contactEmail, phoneVerificationToken);
+        } else if (wanted) {
+            String phone = PhoneNumbers.normalize(contactPhone);
+            if (phone == null) {
+                throw new IllegalArgumentException("Indiquez un numéro pour que l’on puisse vous proposer l’article");
+            }
+            if (user.getPhone() == null || !phone.equals(PhoneNumbers.normalize(user.getPhone()))) {
+                phoneVerificationService.requireVerified(phone, phoneVerificationToken);
+            }
         }
 
         String photoUrl = null;
@@ -103,7 +113,7 @@ public class BookCopyService {
         }
         if (user == null || wanted) {
             copy.setContactName(normalizeName(contactName));
-            copy.setContactPhone(normalizePhone(contactPhone));
+            copy.setContactPhone(PhoneNumbers.normalize(contactPhone));
             copy.setContactEmail(normalizeEmail(contactEmail));
         }
         if (user == null) {
@@ -119,7 +129,7 @@ public class BookCopyService {
     public List<BookCopyDto> search(SchoolLevel level, Subject subject, Boolean libraryMode,
                                     Long zoneId, String title, ListingCategory listingCategory,
                                     ListingKind listingKind, User viewer) {
-        return bookCopyRepository.search(CopyStatus.AVAILABLE, level, subject, libraryMode, zoneId, title, listingCategory, listingKind)
+        return bookCopyRepository.search(catalogStatuses(viewer), level, subject, libraryMode, zoneId, title, listingCategory, listingKind)
                 .stream().map(copy -> toDto(copy, viewer)).toList();
     }
 
@@ -274,11 +284,17 @@ public class BookCopyService {
             publicName = "Anonyme";
         } else if (copy.getContactName() != null && !copy.getContactName().isBlank()) {
             publicName = copy.getContactName().trim();
+        } else if (!hidden && copy.getContactEmail() != null && copy.getContactEmail().contains("@")) {
+            publicName = copy.getContactEmail().substring(0, copy.getContactEmail().indexOf('@'));
         } else {
             publicName = copy.getDepositor().getFirstName() + " " + copy.getDepositor().getLastName();
         }
-        boolean showContact = teamViewer || !hidden
-                || (copy.getListingKind() == ListingKind.WANTED && copy.getContactPhone() != null);
+        boolean taken = copy.getStatus() == CopyStatus.RESERVED
+                || copy.getStatus() == CopyStatus.IN_DELIVERY
+                || copy.getStatus() == CopyStatus.DELIVERED;
+        boolean showContact = !taken && (teamViewer || !hidden
+                || (copy.getListingKind() == ListingKind.WANTED && copy.getContactPhone() != null));
+        boolean showReservedBy = teamViewer && copy.getReservedBy() != null;
         return new BookCopyDto(
                 copy.getId(),
                 copy.getTitle(),
@@ -290,7 +306,7 @@ public class BookCopyService {
                 copy.getZone().getName(),
                 copy.getStatus(),
                 copy.isLibraryMode(),
-                copy.getReservedBy() != null
+                showReservedBy
                         ? copy.getReservedBy().getFirstName() + " " + copy.getReservedBy().getLastName()
                         : null,
                 copy.getCreatedAt(),
@@ -368,15 +384,24 @@ public class BookCopyService {
         return level != null ? level : SchoolLevel.CM2;
     }
 
-    private void applyGuestContact(String contactName, String contactPhone, String contactEmail) {
-        if (normalizeName(contactName) == null) {
-            throw new IllegalArgumentException("Indiquez votre nom pour que l’on puisse vous contacter");
+    private static List<CopyStatus> catalogStatuses(User viewer) {
+        if (viewer == null) {
+            return List.of(CopyStatus.AVAILABLE);
         }
-        if (normalizePhone(contactPhone) == null) {
+        return List.of(CopyStatus.AVAILABLE, CopyStatus.RESERVED, CopyStatus.IN_DELIVERY);
+    }
+
+    private void applyGuestContact(String contactName, String contactPhone, String contactEmail,
+                                   String phoneVerificationToken) {
+        if (PhoneNumbers.normalize(contactPhone) == null) {
             throw new IllegalArgumentException("Indiquez un numéro de téléphone pour que l’on puisse vous contacter");
         }
-        if (contactEmail != null && !contactEmail.isBlank() && normalizeEmail(contactEmail) == null) {
-            throw new IllegalArgumentException("Email invalide");
+        if (normalizeEmail(contactEmail) == null) {
+            throw new IllegalArgumentException("Indiquez un email pour que l’on puisse vous écrire");
+        }
+        phoneVerificationService.requireVerified(contactPhone, phoneVerificationToken);
+        if (contactName != null && !contactName.isBlank() && normalizeName(contactName) == null) {
+            throw new IllegalArgumentException("Nom trop court");
         }
     }
 
@@ -420,17 +445,6 @@ public class BookCopyService {
         }
         String trimmed = value.trim().replaceAll("\\s+", " ");
         return trimmed.length() < 2 ? null : trimmed;
-    }
-
-    private static String normalizePhone(String value) {
-        if (value == null) {
-            return null;
-        }
-        String digits = value.replaceAll("[^0-9+]", "");
-        if (!digits.matches("^\\+?[0-9]{8,15}$")) {
-            return null;
-        }
-        return digits;
     }
 
     private static String normalizeEmail(String value) {

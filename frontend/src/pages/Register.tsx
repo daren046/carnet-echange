@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getZones, register } from "../api/client";
 import { Layout } from "../components/Layout";
+import { PhoneOtpFields } from "../components/PhoneOtpFields";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { LEVEL_LABELS, ROLE_LABELS, type SchoolLevel, type UserRole, type Zone } from "../types";
 
@@ -12,10 +13,12 @@ export function Register() {
   const navigate = useNavigate();
   const [zones, setZones] = useState<Zone[]>([]);
   const [loading, setLoading] = useState(false);
+  const [phoneToken, setPhoneToken] = useState("");
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     password: "",
     role: "STUDENT" as UserRole,
     schoolLevel: "SIXIEME" as SchoolLevel,
@@ -33,9 +36,16 @@ export function Register() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!phoneToken) {
+      toast.error("Confirmez votre numéro avec le code reçu");
+      return;
+    }
     setLoading(true);
     try {
-      await register(form);
+      await register({
+        ...form,
+        phoneVerificationToken: phoneToken,
+      });
       toast.success("Inscription réussie — 1 cauri de bienvenue offert !");
       navigate("/login");
     } catch (err: unknown) {
@@ -49,9 +59,34 @@ export function Register() {
   return (
     <Layout>
       <div className="mx-auto max-w-lg pt-2">
-        <PageHeader title="Inscription" subtitle="Créez votre compte et recevez 1 cauri de bienvenue" />
+        <PageHeader
+          title="Inscription"
+          subtitle="Comme sur Amazon : email, téléphone confirmé par code, et votre quartier."
+        />
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Email</label>
+              <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputClass} />
+            </div>
+            <PhoneOtpFields
+              phone={form.phone}
+              onPhoneChange={(phone) => setForm({ ...form, phone })}
+              token={phoneToken}
+              onVerified={setPhoneToken}
+            />
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Quartier</label>
+              <select required value={form.zoneCode} onChange={(e) => setForm({ ...form, zoneCode: e.target.value })} className={inputClass}>
+                {zones.map((z) => (
+                  <option key={z.code} value={z.code}>{z.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Mot de passe (min. 6 car.)</label>
+              <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputClass} />
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-slate-700">Prénom</label>
@@ -61,14 +96,6 @@ export function Register() {
                 <label className="block text-sm font-medium text-slate-700">Nom</label>
                 <input required value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} className={inputClass} />
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Email</label>
-              <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Mot de passe (min. 6 car.)</label>
-              <input type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputClass} />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700">Profil</label>
@@ -93,14 +120,6 @@ export function Register() {
                 Compte vendeur : vous déposez vos manuels et suivez uniquement vos livres et vos ventes, à l’écart du catalogue public.
               </p>
             )}
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Zone de livraison</label>
-              <select required value={form.zoneCode} onChange={(e) => setForm({ ...form, zoneCode: e.target.value })} className={inputClass}>
-                {zones.map((z) => (
-                  <option key={z.code} value={z.code}>{z.name}</option>
-                ))}
-              </select>
-            </div>
             <PrimaryButton type="submit" disabled={loading} className="w-full py-3">
               {loading ? "Inscription..." : "Créer mon compte"}
             </PrimaryButton>

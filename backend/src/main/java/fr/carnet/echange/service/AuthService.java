@@ -29,12 +29,14 @@ public class AuthService {
     private final StampService stampService;
     private final NotificationService notificationService;
     private final CaurisGrantService caurisGrantService;
+    private final PhoneVerificationService phoneVerificationService;
 
     public AuthService(UserRepository userRepository, ZoneRepository zoneRepository,
                        PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
                        JwtService jwtService, StampService stampService,
                        NotificationService notificationService,
-                       CaurisGrantService caurisGrantService) {
+                       CaurisGrantService caurisGrantService,
+                       PhoneVerificationService phoneVerificationService) {
         this.userRepository = userRepository;
         this.zoneRepository = zoneRepository;
         this.passwordEncoder = passwordEncoder;
@@ -43,6 +45,7 @@ public class AuthService {
         this.stampService = stampService;
         this.notificationService = notificationService;
         this.caurisGrantService = caurisGrantService;
+        this.phoneVerificationService = phoneVerificationService;
     }
 
     @Transactional
@@ -51,8 +54,10 @@ public class AuthService {
             throw new IllegalArgumentException("Cet email est déjà utilisé");
         });
 
+        String phone = phoneVerificationService.requireVerified(dto.phone(), dto.phoneVerificationToken());
+
         Zone zone = zoneRepository.findByCode(dto.zoneCode())
-                .orElseThrow(() -> new IllegalArgumentException("Zone inconnue : " + dto.zoneCode()));
+                .orElseThrow(() -> new IllegalArgumentException("Quartier inconnu : " + dto.zoneCode()));
 
         if (dto.role() != UserRole.STUDENT && dto.role() != UserRole.PARENT && dto.role() != UserRole.SELLER) {
             throw new IllegalArgumentException("Seuls les profils Élève, Parent et Vendeur sont autorisés à l'inscription");
@@ -67,6 +72,7 @@ public class AuthService {
                 dto.role() == UserRole.SELLER ? null : dto.schoolLevel(),
                 zone
         );
+        user.setPhone(phone);
         user = userRepository.save(user);
         stampService.grantWelcomeBonus(user);
         if (dto.role() == UserRole.SELLER) {
@@ -129,6 +135,7 @@ public class AuthService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
+                user.getPhone(),
                 user.getRole(),
                 user.getSchoolLevel(),
                 user.getZone() != null ? user.getZone().getId() : null,

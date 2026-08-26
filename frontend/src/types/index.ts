@@ -38,6 +38,7 @@ export interface UserMe {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string | null;
   role: UserRole;
   schoolLevel: SchoolLevel | null;
   zoneId: number | null;
@@ -261,8 +262,8 @@ export const PROVIDER_LABELS: Record<MobileMoneyProvider, string> = {
 export const COPY_STATUS_LABELS: Record<CopyStatus, string> = {
   PENDING_REVIEW: "En validation",
   AVAILABLE: "Disponible",
-  RESERVED: "Réservé",
-  IN_DELIVERY: "En livraison",
+  RESERVED: "Pris",
+  IN_DELIVERY: "Pris — en livraison",
   DELIVERED: "Livré",
   LIBRARY_BORROWED: "Emprunté (biblio.)",
   REJECTED: "Refusée",

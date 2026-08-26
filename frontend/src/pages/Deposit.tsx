@@ -4,6 +4,7 @@ import { Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { depositBook } from "../api/client";
 import { Layout } from "../components/Layout";
+import { PhoneOtpFields } from "../components/PhoneOtpFields";
 import { Card, PageHeader, PrimaryButton, inputClass } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -49,6 +50,7 @@ export function Deposit() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [phoneToken, setPhoneToken] = useState("");
   const initialRayon: ListingCategory =
     searchParams.get("rayon") === "deco" ? "DECOR" : searchParams.get("rayon") === "divers" ? "MISC" : "BOOKS";
 
@@ -66,7 +68,7 @@ export function Deposit() {
     anonymous: !user,
     quartier: user?.zoneName ?? "",
     contactName: "",
-    contactPhone: "",
+    contactPhone: user?.phone ?? "",
     contactEmail: "",
   });
 
@@ -99,19 +101,31 @@ export function Deposit() {
       toast.error("Décrivez un peu l’article que vous cherchez");
       return;
     }
-    if (wanted && !form.contactPhone.replace(/[^0-9+]/g, "").match(/^\+?[0-9]{8,15}$/)) {
-      toast.error("Indiquez un numéro pour que l’on puisse vous proposer l’article");
-      return;
-    }
-    if (!user && !form.anonymous) {
-      if (form.contactName.trim().length < 2) {
-        toast.error("Indiquez votre nom pour que l’on puisse vous contacter");
+    const phoneOk = !!form.contactPhone.replace(/[^0-9+]/g, "").match(/^\+?[0-9]{8,15}$/);
+    const accountPhone = user?.phone?.replace(/[^0-9+]/g, "") ?? "";
+    const sameAccountPhone = Boolean(accountPhone && form.contactPhone.replace(/[^0-9+]/g, "") === accountPhone);
+    const needsPhoneOtp = !user || (wanted && !sameAccountPhone);
+    if (!user) {
+      if (!form.contactEmail.trim().includes("@")) {
+        toast.error("Indiquez votre email");
         return;
       }
-      if (!form.contactPhone.replace(/[^0-9+]/g, "").match(/^\+?[0-9]{8,15}$/)) {
+      if (!phoneOk) {
         toast.error("Indiquez un numéro de téléphone valide");
         return;
       }
+      if (!phoneToken) {
+        toast.error("Confirmez votre numéro avec le code reçu");
+        return;
+      }
+    }
+    if (wanted && !phoneOk) {
+      toast.error("Indiquez un numéro pour que l’on puisse vous proposer l’article");
+      return;
+    }
+    if (wanted && user && needsPhoneOtp && !phoneToken) {
+      toast.error("Confirmez votre numéro avec le code reçu");
+      return;
     }
     const library = form.libraryMode && form.listingCategory === "BOOKS";
     const pricedSale = !library && form.listingCategory !== "BOOKS" && form.offerType === "SALE";
@@ -169,6 +183,9 @@ export function Deposit() {
       }
       if (form.contactEmail.trim()) {
         data.append("contactEmail", form.contactEmail.trim());
+      }
+      if (phoneToken) {
+        data.append("phoneVerificationToken", phoneToken);
       }
     }
 
@@ -425,80 +442,60 @@ export function Deposit() {
               placeholder="Ex. Cissin, Ouaga 2000, Tampouy…"
             />
           </div>
-          {!user && !form.anonymous && (
+          {!user && (
             <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
               <p className="text-sm font-medium text-emerald-900">
-                Pour vous contacter directement (sans passer par l’équipe)
+                Contact — comme sur Amazon : email et téléphone confirmé par code
               </p>
               <div>
-                <label className="block text-sm font-medium text-slate-700">Votre nom *</label>
+                <label className="block text-sm font-medium text-slate-700">Email *</label>
                 <input
                   required
-                  value={form.contactName}
-                  onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-                  className={inputClass}
-                  placeholder="Prénom ou nom"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Téléphone *</label>
-                <input
-                  required
-                  type="tel"
-                  value={form.contactPhone}
-                  onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                  className={inputClass}
-                  placeholder="Ex. 70 00 00 00"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Email (optionnel)</label>
-                <input
                   type="email"
                   value={form.contactEmail}
                   onChange={(e) => setForm({ ...form, contactEmail: e.target.value })}
                   className={inputClass}
-                  placeholder="pour recevoir un message"
+                  placeholder="pour vous écrire"
                 />
               </div>
+              <PhoneOtpFields
+                phone={form.contactPhone}
+                onPhoneChange={(contactPhone) => setForm({ ...form, contactPhone })}
+                token={phoneToken}
+                onVerified={setPhoneToken}
+              />
+              {form.anonymous && (
+                <p className="text-xs text-slate-500">
+                  Votre identité n’apparaît pas sur l’annonce. Le téléphone et l’email restent pour l’équipe.
+                </p>
+              )}
             </div>
           )}
           {wanted && user && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700">Téléphone *</label>
-              <input
-                required
-                type="tel"
-                value={form.contactPhone}
-                onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                className={inputClass}
-                placeholder="Ex. 70 00 00 00"
-              />
-              <p className="mt-1.5 text-xs text-slate-400">
-                Visible sur la recherche, pour qu’on puisse vous proposer l’article.
-              </p>
-            </div>
-          )}
-          {!user && form.anonymous && (
-            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm text-slate-600">
-                {wanted
-                  ? "La recherche s’affiche comme « Anonyme ». Laissez un numéro pour qu’on puisse vous proposer l’article."
-                  : "L’offre s’affiche comme « Anonyme ». Vous pouvez laisser un numéro pour l’équipe seulement."}
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  {wanted ? "Téléphone *" : "Téléphone (optionnel, non affiché)"}
-                </label>
-                <input
-                  required={wanted}
-                  type="tel"
-                  value={form.contactPhone}
-                  onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                  className={inputClass}
-                  placeholder="Ex. 70 00 00 00"
+            <div className="space-y-3">
+              {user.phone && form.contactPhone.replace(/[^0-9+]/g, "") === user.phone.replace(/[^0-9+]/g, "") ? (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Téléphone *</label>
+                  <input
+                    required
+                    type="tel"
+                    value={form.contactPhone}
+                    onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
+                    className={inputClass}
+                    placeholder="Ex. 70 00 00 00"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Numéro déjà confirmé sur votre compte. Visible sur la recherche.
+                  </p>
+                </div>
+              ) : (
+                <PhoneOtpFields
+                  phone={form.contactPhone}
+                  onPhoneChange={(contactPhone) => setForm({ ...form, contactPhone })}
+                  token={phoneToken}
+                  onVerified={setPhoneToken}
                 />
-              </div>
+              )}
             </div>
           )}
           {user && !wanted && form.listingCategory === "BOOKS" && !seller && (
@@ -554,7 +551,7 @@ export function Deposit() {
               Sans compte, {wanted ? "la recherche" : "l’offre"} est soumise à validation.{" "}
               {form.anonymous
                 ? "Elle restera anonyme. "
-                : "Votre nom et votre téléphone seront visibles une fois publiée. "}
+                : "Votre téléphone confirmé pourra être visible une fois publiée. "}
               <Link to="/register" className="text-emerald-700 hover:underline">Créer un compte</Link>
               {wanted ? " pour publier immédiatement." : " pour publier immédiatement et obtenir des cauris."}
             </p>

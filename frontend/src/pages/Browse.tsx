@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { searchBooks } from "../api/client";
+import { AmbitionBanner } from "../components/AmbitionBanner";
 import {
   BrowseShell,
+  LISTING_GRID_CLASS,
   bookMatchesCategory,
   categoryGalleryTitle,
   levelCategoryLabel,
@@ -115,6 +117,7 @@ export function Browse() {
 
   return (
     <Layout wide>
+      <AmbitionBanner />
       <BrowseShell
         rayon={rayon}
         banner={
@@ -153,7 +156,7 @@ export function Browse() {
             Aucune annonce dans cette catégorie pour le moment.
           </p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className={LISTING_GRID_CLASS}>
             {visibleBooks.map((book) => (
               <BookCard
                 key={book.id}

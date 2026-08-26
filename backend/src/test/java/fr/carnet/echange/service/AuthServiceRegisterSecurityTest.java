@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -21,40 +22,38 @@ class AuthServiceRegisterSecurityTest {
     @Autowired UserRepository userRepository;
     @Autowired ZoneRepository zoneRepository;
     @Autowired PasswordEncoder passwordEncoder;
+    @Autowired PhoneVerificationService phoneVerificationService;
+
+    private RegisterDto dto(String email, UserRole role, SchoolLevel level) {
+        String phone = "70" + String.format("%06d", Math.floorMod(email.hashCode(), 1_000_000));
+        var sent = phoneVerificationService.sendCode(phone);
+        var token = phoneVerificationService.confirm(phone, sent.debugCode()).verificationToken();
+        return new RegisterDto(
+                "Test", "User", email, phone, token, "secret12",
+                role, level, "NORD");
+    }
 
     @Test
     void register_rejectsDelivererRole() {
-        RegisterDto dto = new RegisterDto(
-                "Test", "Livreur", "hack-livreur@test.fr", "secret12",
-                UserRole.DELIVERER, null, "NORD");
-
-        assertThrows(IllegalArgumentException.class, () -> authService.register(dto));
+        assertThrows(IllegalArgumentException.class, () -> authService.register(
+                dto("hack-livreur@test.fr", UserRole.DELIVERER, null)));
     }
 
     @Test
     void register_rejectsAdminRole() {
-        RegisterDto dto = new RegisterDto(
-                "Test", "Admin", "hack-admin@test.fr", "secret12",
-                UserRole.ADMIN, null, "NORD");
-
-        assertThrows(IllegalArgumentException.class, () -> authService.register(dto));
+        assertThrows(IllegalArgumentException.class, () -> authService.register(
+                dto("hack-admin@test.fr", UserRole.ADMIN, null)));
     }
 
     @Test
     void register_allowsStudentRole() {
-        RegisterDto dto = new RegisterDto(
-                "Test", "Eleve", "eleve-sec@test.fr", "secret12",
-                UserRole.STUDENT, SchoolLevel.SIXIEME, "NORD");
-
-        authService.register(dto);
+        assertDoesNotThrow(() -> authService.register(
+                dto("eleve-sec@test.fr", UserRole.STUDENT, SchoolLevel.SIXIEME)));
     }
 
     @Test
     void register_allowsSellerRole() {
-        RegisterDto dto = new RegisterDto(
-                "Test", "Vendeur", "vendeur-sec@test.fr", "secret12",
-                UserRole.SELLER, null, "NORD");
-
-        authService.register(dto);
+        assertDoesNotThrow(() -> authService.register(
+                dto("vendeur-sec@test.fr", UserRole.SELLER, null)));
     }
 }

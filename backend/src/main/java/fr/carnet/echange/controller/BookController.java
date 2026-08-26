@@ -65,6 +65,7 @@ public class BookController {
             @RequestParam(required = false) String contactName,
             @RequestParam(required = false) String contactPhone,
             @RequestParam(required = false) String contactEmail,
+            @RequestParam(required = false) String phoneVerificationToken,
             @RequestParam(defaultValue = "EXCHANGE") OfferType offerType,
             @RequestParam(required = false) Integer expectedPrice,
             @RequestParam(defaultValue = "false") boolean extraCaurisRequested,
@@ -79,7 +80,7 @@ public class BookController {
         BookCopyDto created = bookCopyService.deposit(
                 user, title, subject, level, condition, photo, libraryMode, listingCategory, anonymous,
                 quartierValue, contactName, contactPhone, contactEmail, offerType, expectedPrice,
-                extraCaurisRequested, extraCaurisNote, listingKind, description);
+                extraCaurisRequested, extraCaurisNote, listingKind, description, phoneVerificationToken);
         String message;
         if (guest) {
             message = wanted

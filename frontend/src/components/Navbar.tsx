@@ -37,8 +37,8 @@ const primaryNav = [
 const publicBarNav = [
   { to: "/", label: "Accueil" },
   { to: "/livres", label: "Livres" },
-  { to: "/?categorie=deco", label: "Intérieur Déco" },
-  { to: "/?categorie=divers", label: "Articles divers" },
+  { to: "/deco", label: "Intérieur Déco" },
+  { to: "/divers", label: "Articles divers" },
   { to: "/deposit", label: "Déposer une annonce" },
   { to: "/a-propos", label: "À propos" },
   { to: "/annonces", label: "Voir toutes les annonces" },
@@ -326,11 +326,13 @@ export function Navbar() {
             const active =
               label === "Accueil"
                 ? location.pathname === "/" && !categorie
-                : label === "Intérieur Déco"
-                  ? (location.pathname === "/" && categorie === "deco") || location.pathname === "/deco"
-                  : label === "Articles divers"
-                    ? (location.pathname === "/" && categorie === "divers") || location.pathname === "/divers"
-                    : location.pathname === to;
+                : label === "Livres"
+                  ? location.pathname === "/livres" || (location.pathname === "/" && categorie === "livres")
+                  : label === "Intérieur Déco"
+                    ? location.pathname === "/deco" || (location.pathname === "/" && categorie === "deco")
+                    : label === "Articles divers"
+                      ? location.pathname === "/divers" || (location.pathname === "/" && categorie === "divers")
+                      : location.pathname === to;
             return (
               <Link
                 key={to}
@@ -399,6 +401,7 @@ export function BookCard({
     listingKind?: ListingKind | string | null;
     description?: string | null;
     pickupCaurisCost?: number;
+    status?: string;
   };
   action?: React.ReactNode;
   size?: "default" | "gallery";
@@ -410,9 +413,10 @@ export function BookCard({
     whatsappDigits = `226${whatsappDigits}`;
   }
   const wanted = book.listingKind === "WANTED";
+  const taken = book.status === "RESERVED" || book.status === "IN_DELIVERY";
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className={`overflow-hidden bg-slate-100 ${gallery ? "aspect-[16/10]" : "aspect-[4/3]"}`}>
+      <div className={`relative overflow-hidden bg-slate-100 ${gallery ? "aspect-[4/3]" : "aspect-[4/3]"}`}>
         {book.photoUrl ? (
           <AuthenticatedImage src={book.photoUrl} alt={book.title} className="h-full w-full object-cover" />
         ) : (
@@ -421,8 +425,15 @@ export function BookCard({
             <span className="text-xs font-semibold uppercase tracking-wide">Recherche</span>
           </div>
         )}
+        {taken && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/55">
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-800">
+              Pris
+            </span>
+          </div>
+        )}
       </div>
-      <div className={gallery ? "p-5" : "p-4"}>
+      <div className={gallery ? "p-3 sm:p-4" : "p-4"}>
         <h3 className="font-semibold text-slate-900 line-clamp-2">{book.title}</h3>
         {book.description && (
           <p className="mt-1.5 text-sm leading-relaxed text-slate-500 line-clamp-3">{book.description}</p>
@@ -480,7 +491,7 @@ export function BookCard({
             </span>
           </p>
         )}
-        {book.contactPhone && (
+        {book.contactPhone && !taken && (
           <div className="mt-2 flex flex-wrap gap-2">
             <a
               href={`tel:${phone}`}
@@ -501,7 +512,7 @@ export function BookCard({
             )}
           </div>
         )}
-        {action && <div className="mt-3">{action}</div>}
+        {action && !taken && <div className="mt-3">{action}</div>}
       </div>
     </div>
   );

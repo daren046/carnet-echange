@@ -8,6 +8,7 @@ public record UserMeDto(
         String firstName,
         String lastName,
         String email,
+        String phone,
         UserRole role,
         SchoolLevel schoolLevel,
         Long zoneId,

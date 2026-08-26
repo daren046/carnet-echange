@@ -12,6 +12,8 @@ public record RegisterDto(
         @NotBlank String firstName,
         @NotBlank String lastName,
         @Email @NotBlank String email,
+        @NotBlank String phone,
+        @NotBlank String phoneVerificationToken,
         @Size(min = 6) String password,
         @NotNull @AllowedRegisterRole UserRole role,
         SchoolLevel schoolLevel,

@@ -28,6 +28,9 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(length = 20)
+    private String phone;
+
     @Column(nullable = false)
     private String password;
 
@@ -93,6 +96,7 @@ public class User implements UserDetails {
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getEmail() { return email; }
+    public String getPhone() { return phone; }
     @Override
     public String getPassword() { return password; }
     public UserRole getRole() { return role; }
@@ -109,6 +113,7 @@ public class User implements UserDetails {
     public void setZone(Zone zone) { this.zone = zone; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setPhone(String phone) { this.phone = phone; }
     public void setPassword(String password) { this.password = password; }
     public void setSchoolLevel(SchoolLevel schoolLevel) { this.schoolLevel = schoolLevel; }
 }

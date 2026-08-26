@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { getZones, reserveBook, searchBooks } from "../api/client";
 import {
   BrowseShell,
+  LISTING_GRID_CLASS,
   bookMatchesCategory,
   categoryGalleryTitle,
   isSubjectCategory,
@@ -72,6 +73,10 @@ export function Catalog() {
   const handleReserve = async (book: BookCopy) => {
     if (!user) {
       toast.info("Connectez-vous pour réserver un livre");
+      return;
+    }
+    if (book.status === "RESERVED" || book.status === "IN_DELIVERY") {
+      toast.info("Cet article a déjà été pris");
       return;
     }
     const cost = book.pickupCaurisCost > 0 ? book.pickupCaurisCost : 1;
@@ -166,7 +171,7 @@ export function Catalog() {
         ) : books.length === 0 ? (
           <p className="py-16 text-center text-sm text-slate-400">Aucun manuel disponible pour le moment.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className={LISTING_GRID_CLASS}>
             {books.map((book) => (
               <BookCard
                 key={book.id}

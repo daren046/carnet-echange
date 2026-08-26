@@ -122,6 +122,10 @@ export function Profile() {
               <label className="block text-sm font-medium text-slate-700">Email</label>
               <input disabled value={user?.email ?? ""} className={`${inputClass} bg-slate-50 text-slate-500`} />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Téléphone</label>
+              <input disabled value={user?.phone ?? "Non renseigné"} className={`${inputClass} bg-slate-50 text-slate-500`} />
+            </div>
             {student && (
               <div>
                 <label className="block text-sm font-medium text-slate-700">Niveau scolaire</label>
@@ -133,7 +137,7 @@ export function Profile() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-slate-700">Zone</label>
+              <label className="block text-sm font-medium text-slate-700">Quartier</label>
               <select required value={form.zoneCode} onChange={(e) => setForm({ ...form, zoneCode: e.target.value })} className={inputClass}>
                 {zones.map((z) => (
                   <option key={z.code} value={z.code}>{z.name}</option>
