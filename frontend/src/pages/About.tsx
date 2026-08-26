@@ -76,12 +76,12 @@ const FAQ = [
     a: "Oui, pour certaines catégories. Vous soumettez une demande ; nos équipes vous font un retour sous 48 h.",
   },
   {
-    q: "Pourquoi 1 000 F de livraison ?",
-    a: "Les 1 000 F paient le livreur qui dépose dans votre zone, pour regrouper les tournées. Ils sont payables uniquement en cas de retrait d’un livre. En cas de remise, le livreur récupère gratuitement l’article et des cauris vous sont proposés, à valider selon l’état.",
+    q: "Qui paie la livraison ?",
+    a: "Les frais de livraison sont à votre charge, sauf si vous bénéficiez de la livraison gratuite.",
   },
   {
     q: "C’est quoi la bibliothèque ?",
-    a: "Certains ouvrages s’empruntent avec une caution (5 000 F) remboursée au retour. Aucun cauri n’est débité.",
+    a: "Certains ouvrages s’empruntent avec une caution remboursée au retour. Aucun cauri n’est débité.",
   },
   {
     q: "Puis-je publier sans donner mon nom ?",
@@ -89,7 +89,7 @@ const FAQ = [
   },
   {
     q: "Puis-je annuler une commande ?",
-    a: "Oui, tant que le livreur n’a pas pris la tournée. Le cauri et les 1 000 F sont alors renvoyés.",
+    a: "Oui, tant que le livreur n’a pas pris la tournée. Les cauris et les frais de livraison sont alors renvoyés.",
   },
 ];
 
@@ -185,7 +185,7 @@ export function About() {
           <div className="flex items-start gap-3">
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Le système de cauris</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Le système de fidélité à cauris</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
                 Dès votre première inscription sur la plateforme Perso, vous recevez 50 cauris.
                 Ensuite, vos activités de don, de vente, d’achat ou d’échange d’un article vous
@@ -196,9 +196,8 @@ export function About() {
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
                   <h3 className="font-medium text-slate-900">Gagner des cauris</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Chaque offre (don, vente ou échange) génère une proposition de cauris : 3 si l’article
-                    est neuf, 2 s’il est en bon état, 1 s’il est moyen ou abîmé. L’équipe confirme ou
-                    ajuste avant le crédit.
+                    Chaque offre (don, vente ou échange) génère une proposition de cauris selon l’état
+                    de l’article. L’équipe confirme ou ajuste avant le crédit.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     Vous pouvez soumettre une demande de cauris supplémentaires pour certaines catégories
@@ -211,8 +210,8 @@ export function About() {
                 <div className="rounded-2xl border border-amber-100 bg-white p-4">
                   <h3 className="font-medium text-slate-900">Utiliser ses cauris</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    Un cauri vous permet de récupérer un livre sur la plateforme. La déduction de votre
-                    compte vous est soumise pour autorisation avant traitement.
+                    Vos cauris vous permettront de récupérer certains articles sur la plateforme ou de
+                    bénéficier d’autres avantages (offre soumise à conditions).
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
                     La publication d’articles est autorisée sans inscription, mais vous perdez alors
@@ -220,8 +219,8 @@ export function About() {
                     inscrire le plus rapidement possible.
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                    Les 1 000 F de livraison, regroupée par zone à Ouagadougou, sont payables uniquement
-                    au retrait d’un livre.
+                    NB: Les frais de livraison sont à votre charge sauf si vous bénéficiez de la
+                    livraison gratuite.
                   </p>
                 </div>
               </div>
